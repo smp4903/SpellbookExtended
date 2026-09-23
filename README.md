@@ -4,7 +4,7 @@ A World of Warcraft: Forever addon that lists the class spells and ranks you can
 
 - Every spell you have not learned yet, levels 1 to 60. Spells above your level are greyed out with the level in red; missed lower ranks stay listed until you learn something higher.
 - Trainer cost on each spell (can be hidden), a summary on each level header, and what you can train now with its total at the bottom.
-- On level up, a chat message links the spells the new level unlocked.
+- On level up, the spells the new level unlocked float up on screen, scrolling-combat-text style (or as chat links).
 - A gold plan at the top: what training costs now, or at your next trainer visit, against the money you carry.
 - Right-click a spell to skip it (and the ranks above it); skipped spells drop out of every total.
 - Talking to your class trainer opens the panel beside the trainer window with a "Train all" button that buys everything you have not skipped, cheapest first.
@@ -22,7 +22,8 @@ Open the spellbook: a book button appears on its right edge and opens the panel 
 | `/sbe` | Show or hide the panel |
 | `/sbe dock` | Hover the spellbook and run this if the dock button does not appear |
 | `/sbe auto` | Open the panel together with the spellbook |
-| `/sbe notify` | Turn the level-up chat message on or off |
+| `/sbe notify` | Level-up announcement: toast, chat or off |
+| `/sbe test` | Preview the level-up announcement |
 | `/sbe trainer` | Turn opening with the class trainer on or off |
 | `/sbe debug` | Debug output |
 
