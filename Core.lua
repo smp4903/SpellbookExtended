@@ -12,7 +12,7 @@ do -- Private Scope
         ["trainableOnly"] = false,
         ["showQuestAndBook"] = true,
         ["showCosts"] = true,
-        ["notify"] = "toast",
+        ["notify"] = "alert",
         ["autoOpen"] = false,
         ["openWithTrainer"] = true,
         ["tab"] = 0,

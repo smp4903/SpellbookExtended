@@ -8,7 +8,7 @@ do -- Private Scope
         print("  /sbe  - show or hide the panel")
         print("  /sbe dock  - hover the spellbook first; docks the panel to it")
         print("  /sbe auto  - open the panel whenever the spellbook opens")
-        print("  /sbe notify  - level-up announcement: toast, chat or off")
+        print("  /sbe notify  - level-up announcement: alert, float, chat or off")
         print("  /sbe test  - preview the level-up announcement")
         print("  /sbe trainer  - open the panel when you talk to your class trainer")
         print("  /sbe debug  - toggle debug output")
@@ -44,8 +44,8 @@ do -- Private Scope
             SBE.options.autoOpen = not SBE.options.autoOpen
             SBE.Print("open with the spellbook: "..(SBE.options.autoOpen and "on" or "off"))
         elseif (command == "notify") then
-            local nextStyle = { toast = "chat", chat = "off", off = "toast" }
-            SBE.options.notify = nextStyle[SBE.options.notify] or "toast"
+            local nextStyle = { alert = "float", float = "chat", chat = "off", off = "alert" }
+            SBE.options.notify = nextStyle[SBE.options.notify] or "alert"
             SBE.Print("level-up announcement: "..SBE.options.notify)
         elseif (command == "test") then
             SBE.Preview()

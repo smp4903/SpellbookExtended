@@ -1,5 +1,5 @@
--- Notify: on level up, announces what the new level unlocked, as a floating
--- toast or as chat links.
+-- Notify: on level up, announces what the new level unlocked, as loot-style
+-- alerts, floating text or chat links.
 
 local _, SBE = ...
 
@@ -61,14 +61,17 @@ do -- Private Scope
 
         if (style == "chat") then
             PrintChat(level, trainable, other, cost)
-        else
-            local items = {}
-            for _, item in ipairs(trainable) do
-                table.insert(items, { entry = item.entry })
-            end
-            for _, item in ipairs(other) do
-                table.insert(items, { entry = item.entry, other = true })
-            end
+            return true
+        end
+
+        local items = {}
+        for _, item in ipairs(trainable) do
+            table.insert(items, { entry = item.entry })
+        end
+        for _, item in ipairs(other) do
+            table.insert(items, { entry = item.entry, other = true })
+        end
+        if (style ~= "alert" or not SBE.Alert.Show(level, items, cost)) then
             SBE.Toast.Show(level, items, cost)
         end
         return true
@@ -77,7 +80,8 @@ do -- Private Scope
     -- Shows the next level that unlocks something, from the current one up.
     function Preview()
         for level = UnitLevel("player"), 60 do
-            if (Announce(level, SBE.options.notify == "chat" and "chat" or "toast")) then
+            local style = (SBE.options.notify == "off") and "alert" or SBE.options.notify
+            if (Announce(level, style)) then
                 return
             end
         end

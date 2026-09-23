@@ -25,5 +25,6 @@ Modules\Trainer.lua
 Modules\Panel.lua
 Modules\Dock.lua
 Modules\Toast.lua
+Modules\Alert.lua
 Modules\Notify.lua
 Modules\SlashCommands.lua
