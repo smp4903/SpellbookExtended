@@ -27,7 +27,6 @@ Open the spellbook: a book button appears on its right edge and opens the panel 
 | `/sbe notify` | Level-up announcement: alert, float, chat or off |
 | `/sbe test` | Preview the level-up announcement |
 | `/sbe trainer` | Turn opening with the class trainer on or off |
-| `/sbe debug` | Debug output |
 
 ## Data
 
@@ -43,9 +42,15 @@ Regenerate after a new beta build with `tools/fetch_sources.sh` (add `--report` 
 
 Hand-kept alongside the generated files: `Data/QuestHints.lua` (where class quests start), `Data/WeaponSkills.lua` (weapon masters, from WhatsTraining), and the quest-spell list at the top of `tools/build_data.py`.
 
-## Tests
+## Development
 
-`tests/run.sh` loads the addon against a stubbed WoW API and checks the spell list, the trainer, the level-up announcement and the settings page. It needs `lua5.1`.
+`Dev/DevTools.lua` adds `/sbe debug` (debug output, including every trainer service as the client reports it) and `/sbe inspect` (textures and anchors of the frame under the mouse), and exposes the addon table as the global `SpellbookExtended` for `/dump`. The TOC lists it between `#@debug@` markers, so releases leave it out. Mark any other development-only code with `--@debug@` / `--@end-debug@` in Lua or `#@debug@` / `#@end-debug@` in the TOC; these are also the markers CurseForge's packager understands.
+
+`tests/run.sh` loads the addon against a stubbed WoW API and checks the spell list, the trainer, the level-up announcement, the settings page and that dev tools stay out of releases. It needs `lua5.1`. Pass a folder to test a release build instead: `tests/run.sh dist/SpellbookExtended-v0-1-0/SpellbookExtended`.
+
+## Release
+
+`python3 tools/build_release.py` writes `dist/SpellbookExtended-v<version>.zip`, with the version from the TOC and dots as dashes (`0.1.0` becomes `0-1-0`), plus the same files unzipped in `dist/SpellbookExtended-v<version>/`. The zip holds a single `SpellbookExtended/` folder, ready to unpack into `Interface/AddOns` or to upload to CurseForge. It contains the TOC, the files the TOC lists and `THIRD_PARTY_NOTICES.txt`; `Dev/`, `tests/`, `tools/` and this README stay out.
 
 ## Known limits
 

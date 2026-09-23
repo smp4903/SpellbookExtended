@@ -90,11 +90,8 @@ do -- Private Scope
 
         for index = 1, GetNumTrainerServices() do
             local name, subtext, category = GetTrainerServiceInfo(index)
-            if (SBE.debug) then
-                local id = ServiceSpellID(index)
-                SBE.DebugPrint(string.format("  %d: %s (%s) category=%s id=%s listed=%s trainable=%s",
-                    index, tostring(name), tostring(subtext), tostring(category), tostring(id),
-                    tostring(id and SBE.SpellList.Get(id) ~= nil), tostring(id and SBE.SpellList.IsTrainable(id))))
+            if (SBE.OnTrainerService) then
+                SBE.OnTrainerService(index, name, subtext, category, ServiceSpellID(index))
             end
             if (category ~= "header") then
                 local id = ServiceSpellID(index)

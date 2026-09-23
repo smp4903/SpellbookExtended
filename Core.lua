@@ -1,8 +1,7 @@
--- NAMESPACE: SpellbookExtended (addon table, also exposed as a global for /dump)
+-- NAMESPACE: the addon table (Dev/DevTools.lua exposes it as a global in development builds)
 -- OPTIONS: SpellbookExtended_Options (per character), SpellbookExtended_TrainerCache (account)
 
 local ADDON_NAME, SBE = ...
-SpellbookExtended = SBE
 
 SBE.Data = {}
 
@@ -22,7 +21,7 @@ do -- Private Scope
     local listeners = {}
 
     -- Forward declarations: keep these as file-locals so they never leak into _G.
-    local LoadOptions, On, Fire, SafeRegister, OnEvent, Print, DebugPrint
+    local LoadOptions, On, Fire, SafeRegister, OnEvent, Print
     local GetSpellName, GetSpellIcon, GetSpellSubtext, GetSpellLevelLearned, IsKnown, FormatMoney
 
     function LoadOptions()
@@ -59,7 +58,7 @@ do -- Private Scope
     function SafeRegister(event)
         local ok = pcall(frame.RegisterEvent, frame, event)
         if (not ok) then
-            DebugPrint("event not available: "..event)
+            SBE.DebugPrint("event not available: "..event)
         end
         return ok
     end
@@ -76,11 +75,6 @@ do -- Private Scope
         print("|cff34c0ebSpellbookExtended:|r "..msg)
     end
 
-    function DebugPrint(msg)
-        if (SBE.debug) then
-            print("|cff34c0ebSBE|r "..msg)
-        end
-    end
 
     -- SPELL API
     -- Forever runs the Retail client: the Classic globals (GetSpellInfo...) are gone.
@@ -135,7 +129,8 @@ do -- Private Scope
     SBE.On = On
     SBE.Fire = Fire
     SBE.Print = Print
-    SBE.DebugPrint = DebugPrint
+    -- Silent in releases; Dev/DevTools.lua replaces it.
+    SBE.DebugPrint = function() end
     SBE.GetSpellName = GetSpellName
     SBE.GetSpellIcon = GetSpellIcon
     SBE.GetSpellSubtext = GetSpellSubtext
