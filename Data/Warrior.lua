@@ -68,7 +68,7 @@ SBE.Data.WARRIOR = {
         { id = 11608, level = 40, tab = 2, rank = 3, cost = 22000, prev = 7369 }, -- Cleave 3
         { id = 20660, level = 40, tab = 2, rank = 3, cost = 22000, prev = 20658 }, -- Execute 3
         { id = 11550, level = 42, tab = 2, rank = 5, cost = 32000, prev = 11549 }, -- Battle Shout 5
-        { id = 20616, level = 42, tab = 2, rank = 2, cost = 32000, prev = 20252 }, -- Intercept 2
+        { id = 20616, level = 42, tab = 2, rank = 2, prev = 20252 }, -- Intercept 2
         { id = 11584, level = 44, tab = 1, rank = 3, cost = 34000, prev = 7887 }, -- Overpower 3
         { id = 11555, level = 44, tab = 2, rank = 4, cost = 34000, prev = 11554 }, -- Demoralizing Shout 4
         { id = 11600, level = 44, tab = 3, rank = 4, cost = 34000, prev = 7379 }, -- Revenge 4
@@ -86,7 +86,7 @@ SBE.Data.WARRIOR = {
         { id = 11609, level = 50, tab = 2, rank = 4, cost = 42000, prev = 11608 }, -- Cleave 4
         { id = 1719, level = 50, tab = 2, cost = 42000 }, -- Recklessness
         { id = 11551, level = 52, tab = 2, rank = 6, cost = 54000, prev = 11550 }, -- Battle Shout 6
-        { id = 20617, level = 52, tab = 2, rank = 3, cost = 54000, prev = 20616 }, -- Intercept 3
+        { id = 20617, level = 52, tab = 2, rank = 3, prev = 20616 }, -- Intercept 3
         { id = 1672, level = 52, tab = 3, rank = 3, cost = 54000, prev = 1671 }, -- Shield Bash 3
         { id = 7373, level = 54, tab = 1, rank = 3, cost = 56000, prev = 7372 }, -- Hamstring 3
         { id = 21552, level = 54, tab = 1, rank = 3, cost = 2800, prev = 21551, requires = 12294 }, -- Mortal Strike 3

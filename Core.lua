@@ -11,6 +11,8 @@ do -- Private Scope
         ["showKnown"] = false,
         ["trainableOnly"] = false,
         ["showQuestAndBook"] = true,
+        ["showCosts"] = true,
+        ["notifyLevelUp"] = true,
         ["autoOpen"] = false,
         ["tab"] = 0,
     }

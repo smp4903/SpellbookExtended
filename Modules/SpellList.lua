@@ -22,7 +22,7 @@ do -- Private Scope
 
     -- Forward declarations: keep these as file-locals so they never leak into _G.
     local Init, AddEntry, FamilyKnown, IsDone, IsEligible, Level, Cost, StateOf
-    local Build, Matches, Discover, RequestData, OnDataLoaded, Changed, Tabs
+    local Build, NewAtLevel, Matches, Discover, RequestData, OnDataLoaded, Changed, Tabs
 
     function Init()
         local _, class = UnitClass("player")
@@ -141,8 +141,8 @@ do -- Private Scope
         return true
     end
 
-    -- Returns sections sorted by level, each { level, items, trainableCost },
-    -- plus a summary of what can be bought right now.
+    -- Returns sections sorted by level, each { level, items, count, trainable,
+    -- cost, trainableCost }, plus a summary of what can be bought right now.
     function Build(filter)
         local options = SBE.options
         local playerLevel = UnitLevel("player")
@@ -167,7 +167,7 @@ do -- Private Scope
                 if (visible) then
                     local section = byLevel[level]
                     if (not section) then
-                        section = { level = level, items = {}, trainableCost = 0 }
+                        section = { level = level, items = {}, count = 0, trainable = 0, cost = 0, trainableCost = 0 }
                         byLevel[level] = section
                         table.insert(sections, section)
                     end
@@ -175,9 +175,17 @@ do -- Private Scope
                     local cost = Cost(entry)
                     table.insert(section.items, {
                         entry = entry, name = name, level = level, state = state, cost = cost,
+                        gated = level > playerLevel,
                     })
 
+                    if (state ~= STATE_KNOWN) then
+                        section.count = section.count + 1
+                        if (state ~= STATE_OTHER) then
+                            section.cost = section.cost + (cost or 0)
+                        end
+                    end
                     if (state == STATE_TRAINABLE) then
+                        section.trainable = section.trainable + 1
                         section.trainableCost = section.trainableCost + (cost or 0)
                         summary.trainable = summary.trainable + 1
                         summary.cost = summary.cost + (cost or 0)
@@ -200,6 +208,23 @@ do -- Private Scope
         end
 
         return sections, summary
+    end
+
+    -- What reaching this level unlocked: spells the trainer now sells, and
+    -- quest or book spells that became possible. Filters are ignored.
+    function NewAtLevel(newLevel)
+        local trainable, other = {}, {}
+        for _, entry in ipairs(entries) do
+            if (IsEligible(entry) and Level(entry) == newLevel) then
+                local state = StateOf(entry, newLevel, newLevel)
+                if (state == STATE_TRAINABLE) then
+                    table.insert(trainable, { entry = entry, cost = Cost(entry) })
+                elseif (state == STATE_OTHER) then
+                    table.insert(other, { entry = entry })
+                end
+            end
+        end
+        return trainable, other
     end
 
     -- A trainer listed a spell the shipped data does not have.
@@ -257,6 +282,7 @@ do -- Private Scope
     SBE.On("PLAYER_MONEY", Changed)
 
     SpellList.Build = Build
+    SpellList.NewAtLevel = NewAtLevel
     SpellList.Discover = Discover
     SpellList.Changed = Changed
     SpellList.Tabs = Tabs

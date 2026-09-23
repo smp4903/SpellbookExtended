@@ -36,7 +36,7 @@ SBE.Data.DRUID = {
         { id = 1062, level = 18, tab = 1, rank = 2, cost = 1900, prev = 339 }, -- Entangling Roots 2
         { id = 770, level = 18, tab = 1, rank = 1, cost = 1900 }, -- Faerie Fire 1
         { id = 2637, level = 18, tab = 1, rank = 1, cost = 1900 }, -- Hibernate 1
-        { id = 16810, level = 18, tab = 1, rank = 2, cost = 95, prev = 16689 }, -- Nature's Grasp 2
+        { id = 16810, level = 18, tab = 1, rank = 2, prev = 16689 }, -- Nature's Grasp 2
         { id = 6808, level = 18, tab = 2, rank = 2, cost = 1900, prev = 6807 }, -- Maul 2
         { id = 8938, level = 18, tab = 3, rank = 2, cost = 1900, prev = 8936 }, -- Regrowth 2
         { id = 16864, level = 20, tab = 1 }, -- Omen of Clarity
@@ -68,7 +68,7 @@ SBE.Data.DRUID = {
         { id = 5189, level = 26, tab = 3, rank = 5, cost = 4500, prev = 5188 }, -- Healing Touch 5
         { id = 5195, level = 28, tab = 1, rank = 3, cost = 5000, prev = 1062 }, -- Entangling Roots 3
         { id = 8927, level = 28, tab = 1, rank = 5, cost = 5000, prev = 8926 }, -- Moonfire 5
-        { id = 16811, level = 28, tab = 1, rank = 3, cost = 250, prev = 16810 }, -- Nature's Grasp 3
+        { id = 16811, level = 28, tab = 1, rank = 3, prev = 16810 }, -- Nature's Grasp 3
         { id = 5209, level = 28, tab = 2, cost = 5000, needs = { 5487 } }, -- Challenging Roar
         { id = 3029, level = 28, tab = 2, rank = 2, cost = 5000, prev = 1082 }, -- Claw 2
         { id = 8998, level = 28, tab = 2, rank = 1, cost = 5000, needs = { 768 } }, -- Cower 1
@@ -104,7 +104,7 @@ SBE.Data.DRUID = {
         { id = 1237949, level = 36, tab = 3, rank = 3, prev = 1237948 }, -- Revive 3
         { id = 5196, level = 38, tab = 1, rank = 4, cost = 12000, prev = 5195 }, -- Entangling Roots 4
         { id = 18657, level = 38, tab = 1, rank = 2, cost = 12000, prev = 2637 }, -- Hibernate 2
-        { id = 16812, level = 38, tab = 1, rank = 4, cost = 600, prev = 16811 }, -- Nature's Grasp 4
+        { id = 16812, level = 38, tab = 1, rank = 4, prev = 16811 }, -- Nature's Grasp 4
         { id = 8955, level = 38, tab = 1, rank = 2, cost = 12000, prev = 2908 }, -- Soothe Animal 2
         { id = 6780, level = 38, tab = 1, rank = 6, cost = 12000, prev = 5180 }, -- Wrath 6
         { id = 5201, level = 38, tab = 2, rank = 3, cost = 12000, prev = 3029 }, -- Claw 3
@@ -144,7 +144,7 @@ SBE.Data.DRUID = {
         { id = 9829, level = 46, tab = 2, rank = 4, cost = 20000, prev = 8992 }, -- Shred 4
         { id = 9839, level = 46, tab = 3, rank = 8, cost = 20000, prev = 8910 }, -- Rejuvenation 8
         { id = 9852, level = 48, tab = 1, rank = 5, cost = 22000, prev = 5196 }, -- Entangling Roots 5
-        { id = 16813, level = 48, tab = 1, rank = 5, cost = 1100, prev = 16812 }, -- Nature's Grasp 5
+        { id = 16813, level = 48, tab = 1, rank = 5, prev = 16812 }, -- Nature's Grasp 5
         { id = 9849, level = 48, tab = 2, rank = 4, cost = 22000, prev = 5201 }, -- Claw 4
         { id = 22828, level = 48, tab = 2, rank = 3, cost = 22000, prev = 22827 }, -- Ferocious Bite 3
         { id = 1238070, level = 48, tab = 2, rank = 3, prev = 1238069, requires = 407995 }, -- Mangle 3
@@ -181,7 +181,7 @@ SBE.Data.DRUID = {
         { id = 9853, level = 58, tab = 1, rank = 6, cost = 32000, prev = 9852 }, -- Entangling Roots 6
         { id = 18658, level = 58, tab = 1, rank = 3, cost = 32000, prev = 18657 }, -- Hibernate 3
         { id = 9835, level = 58, tab = 1, rank = 10, cost = 32000, prev = 9834 }, -- Moonfire 10
-        { id = 17329, level = 58, tab = 1, rank = 6, cost = 1600, prev = 16813 }, -- Nature's Grasp 6
+        { id = 17329, level = 58, tab = 1, rank = 6, prev = 16813 }, -- Nature's Grasp 6
         { id = 9876, level = 58, tab = 1, rank = 6, cost = 32000, prev = 9875 }, -- Starfire 6
         { id = 9850, level = 58, tab = 2, rank = 5, cost = 32000, prev = 9849 }, -- Claw 5
         { id = 1235827, level = 58, tab = 2, rank = 3, prev = 1235826 }, -- Lacerate 3

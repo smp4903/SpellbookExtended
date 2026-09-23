@@ -37,7 +37,7 @@ do -- Private Scope
     -- Forward declarations: keep these as file-locals so they never leak into _G.
     local Create, CreateChrome, CreateToolbar, CreateFooter, CreateCheckbox, CreateParchment
     local AcquireTile, AcquireHeader, ReleaseAll, Refresh, DrawTile, DrawHeader
-    local ShowTooltip, OnTileClick, Colour, SubText, Toggle, ShowPanel, HidePanel
+    local ShowTooltip, OnTileClick, Colour, SubText, HeaderSummary, Toggle, ShowPanel, HidePanel
 
     function Colour(fontString, c)
         fontString:SetTextColor(c[1], c[2], c[3])
@@ -210,7 +210,10 @@ do -- Private Scope
         local other = CreateCheckbox("Quest & book spells", "showQuestAndBook", "Include spells learned from class quests or class books instead of the trainer.")
         other:SetPoint("LEFT", now.label, "RIGHT", 12, 0)
 
-        panel.checkboxes = { known, now, other }
+        local costs = CreateCheckbox("Show costs", "showCosts", "Show the trainer price on each spell and in the level summaries.")
+        costs:SetPoint("LEFT", other.label, "RIGHT", 12, 0)
+
+        panel.checkboxes = { known, now, other, costs }
 
         local summary = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         summary:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -16, 16)
@@ -318,11 +321,27 @@ do -- Private Scope
             Colour(header.note, INK_FADED)
         end
 
-        if (section.trainableCost > 0) then
-            header.cost:SetText(SBE.FormatMoney(section.trainableCost))
+        header.cost:SetText(HeaderSummary(section, playerLevel))
+    end
+
+    -- Reached levels count what can be bought now; later ones count what is coming.
+    function HeaderSummary(section, playerLevel)
+        local count, cost, noun
+        if (section.level <= playerLevel) then
+            count, cost, noun = section.trainable, section.trainableCost, "to train"
         else
-            header.cost:SetText("")
+            count, cost = section.count, section.cost
+            noun = (count == 1) and "spell" or "spells"
         end
+        if (count == 0) then
+            return ""
+        end
+
+        local text = count.." "..noun
+        if (SBE.options.showCosts and cost > 0) then
+            text = text.."  "..SBE.FormatMoney(cost)
+        end
+        return text
     end
 
     function SubText(item)
@@ -333,11 +352,12 @@ do -- Private Scope
         if (item.state == SpellList.STATE_KNOWN) then
             return prefix.."Known", INK_FADED
         end
-        if (entry.quest) then
-            return prefix.."Class quest", NOTE
-        end
-        if (entry.book) then
-            return prefix.."Class book", NOTE
+        if (entry.quest or entry.book) then
+            local source = entry.quest and "Class quest" or "Class book"
+            if (item.gated) then
+                return prefix..source..", level "..item.level, BAD
+            end
+            return prefix..source, NOTE
         end
         if (item.state == SpellList.STATE_FUTURE) then
             return prefix.."Level "..item.level, BAD
@@ -345,11 +365,11 @@ do -- Private Scope
         if (item.state == SpellList.STATE_BLOCKED) then
             return prefix.."Needs earlier rank", BAD
         end
-        if (item.cost) then
+        if (item.cost and SBE.options.showCosts) then
             local colour = (item.cost <= GetMoney()) and INK_SOFT or BAD
             return prefix..SBE.FormatMoney(item.cost), colour
         end
-        return prefix.."Trainer", INK_SOFT
+        return prefix.."Trainable", INK_SOFT
     end
 
     function DrawTile(tile, item)
@@ -363,7 +383,7 @@ do -- Private Scope
         tile.sub:SetText(text)
         Colour(tile.sub, colour)
 
-        local dim = item.state == SpellList.STATE_FUTURE or item.state == SpellList.STATE_KNOWN
+        local dim = item.gated or item.state == SpellList.STATE_KNOWN
         tile.icon:SetDesaturated(dim)
         tile.icon:SetAlpha(dim and 0.6 or 1)
         Colour(tile.name, dim and INK_FADED or INK)
@@ -425,7 +445,11 @@ do -- Private Scope
         end
 
         if (summary.trainable > 0) then
-            panel.summary:SetText(string.format("Trainable now: %d  %s", summary.trainable, SBE.FormatMoney(summary.cost)))
+            local text = summary.trainable.." to train now"
+            if (SBE.options.showCosts and summary.cost > 0) then
+                text = text.."  "..SBE.FormatMoney(summary.cost)
+            end
+            panel.summary:SetText(text)
         else
             panel.summary:SetText("Nothing to train right now")
         end

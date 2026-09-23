@@ -57,7 +57,7 @@ SBE.Data.PALADIN = {
         { id = 5614, level = 28, tab = 1, rank = 2, cost = 9000, prev = 879 }, -- Exorcism 2
         { id = 19876, level = 28, tab = 2, rank = 1, cost = 9000 }, -- Shadow Resistance Aura 1
         { id = 680, level = 28, tab = 3, rank = 4, prev = 1866 }, -- Holy Strike 4
-        { id = 20116, level = 30, tab = 1, rank = 2, cost = 200, prev = 26573 }, -- Consecration 2
+        { id = 20116, level = 30, tab = 1, rank = 2, prev = 26573 }, -- Consecration 2
         { id = 1042, level = 30, tab = 1, rank = 5, cost = 11000, prev = 1026 }, -- Holy Light 5
         { id = 2800, level = 30, tab = 1, rank = 2, cost = 11000, prev = 633 }, -- Lay on Hands 2
         { id = 20165, level = 30, tab = 1, rank = 1, cost = 11000 }, -- Seal of Light 1
@@ -83,7 +83,7 @@ SBE.Data.PALADIN = {
         { id = 5627, level = 38, tab = 1, rank = 2, cost = 16000, prev = 2878 }, -- Turn Undead 2
         { id = 10278, level = 38, tab = 2, rank = 3, cost = 16000, prev = 5599 }, -- Blessing of Protection 3
         { id = 19977, level = 40, tab = 1, rank = 1, cost = 20000 }, -- Blessing of Light 1
-        { id = 20922, level = 40, tab = 1, rank = 3, cost = 1000, prev = 20116 }, -- Consecration 3
+        { id = 20922, level = 40, tab = 1, rank = 3, prev = 20116 }, -- Consecration 3
         { id = 20473, level = 40, tab = 1, rank = 2, prev = 1311606, requires = 1311606 }, -- Holy Shock 2
         { id = 20347, level = 40, tab = 1, rank = 2, cost = 20000, prev = 20165 }, -- Seal of Light 2
         { id = 1032, level = 40, tab = 2, rank = 5, cost = 20000, prev = 10291 }, -- Devotion Aura 5
@@ -110,7 +110,7 @@ SBE.Data.PALADIN = {
         { id = 20356, level = 48, tab = 1, rank = 2, cost = 26000, prev = 20166 }, -- Seal of Wisdom 2
         { id = 19899, level = 48, tab = 2, rank = 2, cost = 26000, prev = 19891 }, -- Fire Resistance Aura 2
         { id = 19978, level = 50, tab = 1, rank = 2, cost = 28000, prev = 19977 }, -- Blessing of Light 2
-        { id = 20923, level = 50, tab = 1, rank = 4, cost = 1400, prev = 20922 }, -- Consecration 4
+        { id = 20923, level = 50, tab = 1, rank = 4, prev = 20922 }, -- Consecration 4
         { id = 19942, level = 50, tab = 1, rank = 5, cost = 28000, prev = 19941 }, -- Flash of Light 5
         { id = 2812, level = 50, tab = 1, rank = 1, cost = 28000 }, -- Holy Wrath 1
         { id = 10310, level = 50, tab = 1, rank = 3, cost = 28000, prev = 2800 }, -- Lay on Hands 3
@@ -146,7 +146,7 @@ SBE.Data.PALADIN = {
         { id = 20423, level = 58, tab = 2, rank = 7, prev = 20422 }, -- Seal of Fury 7
         { id = 19979, level = 60, tab = 1, rank = 3, cost = 46000, prev = 19978 }, -- Blessing of Light 3
         { id = 25290, level = 60, tab = 1, rank = 6, book = 21288, prev = 19854 }, -- Blessing of Wisdom 6
-        { id = 20924, level = 60, tab = 1, rank = 5, cost = 2300, prev = 20923 }, -- Consecration 5
+        { id = 20924, level = 60, tab = 1, rank = 5, prev = 20923 }, -- Consecration 5
         { id = 10314, level = 60, tab = 1, rank = 6, cost = 46000, prev = 10313 }, -- Exorcism 6
         { id = 25890, level = 60, tab = 1, rank = 1, cost = 46000, needs = { 19979 } }, -- Greater Blessing of Light 1
         { id = 25918, level = 60, tab = 1, rank = 2, cost = 46000, prev = 25894, needs = { 25290 } }, -- Greater Blessing of Wisdom 2
@@ -158,7 +158,7 @@ SBE.Data.PALADIN = {
         { id = 20349, level = 60, tab = 1, rank = 4, cost = 46000, prev = 20348 }, -- Seal of Light 4
         { id = 10293, level = 60, tab = 2, rank = 7, cost = 46000, prev = 10292 }, -- Devotion Aura 7
         { id = 19900, level = 60, tab = 2, rank = 3, cost = 46000, prev = 19899 }, -- Fire Resistance Aura 3
-        { id = 25898, level = 60, tab = 2, cost = 2070 }, -- Greater Blessing of Kings
+        { id = 25898, level = 60, tab = 2 }, -- Greater Blessing of Kings
         { id = 25895, level = 60, tab = 2, cost = 46000, needs = { 1038 } }, -- Greater Blessing of Salvation
         { id = 20928, level = 60, tab = 2, rank = 3, cost = 2070, prev = 20927, requires = 20925 }, -- Holy Shield 3
         { id = 25291, level = 60, tab = 3, rank = 7, book = 21289, prev = 19838 }, -- Blessing of Might 7

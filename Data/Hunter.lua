@@ -13,6 +13,7 @@ SBE.Data.HUNTER = {
         { id = 5116, level = 8, tab = 2, cost = 200 }, -- Concussive Shot
         { id = 14260, level = 8, tab = 3, rank = 2, cost = 200, prev = 2973 }, -- Raptor Strike 2
         { id = 13165, level = 10, tab = 1, rank = 1, cost = 400 }, -- Aspect of the Hawk 1
+        { id = 5149, level = 10, tab = 1, quest = true }, -- Beast Training
         { id = 883, level = 10, tab = 1, quest = true }, -- Call Pet
         { id = 2641, level = 10, tab = 1, quest = true }, -- Dismiss Pet
         { id = 6991, level = 10, tab = 1, quest = true }, -- Feed Pet
@@ -52,7 +53,7 @@ SBE.Data.HUNTER = {
         { id = 19880, level = 26, tab = 3, cost = 7000 }, -- Track Elementals
         { id = 14319, level = 28, tab = 1, rank = 3, cost = 8000, prev = 14318 }, -- Aspect of the Hawk 3
         { id = 3661, level = 28, tab = 1, rank = 3, cost = 8000, prev = 3111 }, -- Mend Pet 3
-        { id = 20900, level = 28, tab = 2, rank = 2, cost = 400, prev = 19434 }, -- Aimed Shot 2
+        { id = 20900, level = 28, tab = 2, rank = 2, prev = 19434 }, -- Aimed Shot 2
         { id = 14283, level = 28, tab = 2, rank = 4, cost = 8000, prev = 14282 }, -- Arcane Shot 4
         { id = 13809, level = 28, tab = 3, cost = 8000 }, -- Frost Trap
         { id = 13161, level = 30, tab = 1, rank = 1, cost = 8000 }, -- Aspect of the Beast 1
@@ -71,7 +72,7 @@ SBE.Data.HUNTER = {
         { id = 13813, level = 34, tab = 3, rank = 1, cost = 12000 }, -- Explosive Trap 1
         { id = 3662, level = 36, tab = 1, rank = 4, cost = 14000, prev = 3661 }, -- Mend Pet 4
         { id = 1293525, level = 36, tab = 1, rank = 2, prev = 1293241, requires = 1293241 }, -- Summon Hawk 2
-        { id = 20901, level = 36, tab = 2, rank = 3, cost = 700, prev = 20900 }, -- Aimed Shot 3
+        { id = 20901, level = 36, tab = 2, rank = 3, prev = 20900 }, -- Aimed Shot 3
         { id = 14284, level = 36, tab = 2, rank = 5, cost = 14000, prev = 14283 }, -- Arcane Shot 5
         { id = 3034, level = 36, tab = 2, rank = 1, cost = 14000 }, -- Viper Sting 1
         { id = 14303, level = 36, tab = 3, rank = 3, cost = 14000, prev = 14302 }, -- Immolation Trap 3
@@ -90,7 +91,7 @@ SBE.Data.HUNTER = {
         { id = 13553, level = 42, tab = 2, rank = 6, cost = 24000, prev = 13552 }, -- Serpent Sting 6
         { id = 20909, level = 42, tab = 3, rank = 3, cost = 1200, prev = 1242634, requires = 19306 }, -- Counterattack 3
         { id = 13542, level = 44, tab = 1, rank = 5, cost = 26000, prev = 3662 }, -- Mend Pet 5
-        { id = 20902, level = 44, tab = 2, rank = 4, cost = 1300, prev = 20901 }, -- Aimed Shot 4
+        { id = 20902, level = 44, tab = 2, rank = 4, prev = 20901 }, -- Aimed Shot 4
         { id = 14285, level = 44, tab = 2, rank = 6, cost = 26000, prev = 14284 }, -- Arcane Shot 6
         { id = 14316, level = 44, tab = 3, rank = 2, cost = 26000, prev = 13813 }, -- Explosive Trap 2
         { id = 14270, level = 44, tab = 3, rank = 3, cost = 26000, prev = 14269 }, -- Mongoose Bite 3
@@ -111,7 +112,7 @@ SBE.Data.HUNTER = {
         { id = 24120, level = 50, tab = 3, rank = 3, prev = 24119 }, -- Lacerate 3
         { id = 19879, level = 50, tab = 3, cost = 36000 }, -- Track Dragonkin
         { id = 13543, level = 52, tab = 1, rank = 6, cost = 40000, prev = 13542 }, -- Mend Pet 6
-        { id = 20903, level = 52, tab = 2, rank = 5, cost = 2000, prev = 20902 }, -- Aimed Shot 5
+        { id = 20903, level = 52, tab = 2, rank = 5, prev = 20902 }, -- Aimed Shot 5
         { id = 14286, level = 52, tab = 2, rank = 7, cost = 40000, prev = 14285 }, -- Arcane Shot 7
         { id = 20910, level = 54, tab = 3, rank = 4, cost = 2100, prev = 20909, requires = 19306 }, -- Counterattack 4
         { id = 14317, level = 54, tab = 3, rank = 3, cost = 42000, prev = 14316 }, -- Explosive Trap 3
@@ -130,7 +131,7 @@ SBE.Data.HUNTER = {
         { id = 13544, level = 60, tab = 1, rank = 7, cost = 50000, prev = 13543 }, -- Mend Pet 7
         { id = 1293527, level = 60, tab = 1, rank = 4, prev = 1293526, requires = 1293241 }, -- Summon Hawk 4
         { id = 19801, level = 60, tab = 1, book = 16665 }, -- Tranquilizing Shot
-        { id = 20904, level = 60, tab = 2, rank = 6, cost = 2500, prev = 20903 }, -- Aimed Shot 6
+        { id = 20904, level = 60, tab = 2, rank = 6, prev = 20903 }, -- Aimed Shot 6
         { id = 14287, level = 60, tab = 2, rank = 8, cost = 50000, prev = 14286 }, -- Arcane Shot 8
         { id = 15632, level = 60, tab = 2, rank = 6, cost = 50000, prev = 15631 }, -- Distracting Shot 6
         { id = 25295, level = 60, tab = 2, rank = 9, book = 21306, prev = 13555 }, -- Serpent Sting 9

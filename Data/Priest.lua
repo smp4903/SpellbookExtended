@@ -119,7 +119,7 @@ SBE.Data.PRIEST = {
         { id = 6078, level = 38, tab = 2, rank = 6, cost = 16000, prev = 6077 }, -- Renew 6
         { id = 6060, level = 38, tab = 2, rank = 6, cost = 16000, prev = 1004 }, -- Smite 6
         { id = 1277638, level = 40, tab = 1, rank = 3, prev = 1277634 }, -- Contingency Plan 3
-        { id = 14818, level = 40, tab = 1, rank = 2, cost = 900, prev = 14752 }, -- Divine Spirit 2
+        { id = 14818, level = 40, tab = 1, rank = 2, prev = 14752 }, -- Divine Spirit 2
         { id = 19273, level = 40, tab = 1, rank = 3, cost = 810, prev = 19271, race = 1 }, -- Feedback 3
         { id = 1006, level = 40, tab = 1, rank = 4, cost = 18000, prev = 602 }, -- Inner Fire 4
         { id = 10874, level = 40, tab = 1, rank = 3, cost = 18000, prev = 8131 }, -- Mana Burn 3
@@ -163,7 +163,7 @@ SBE.Data.PRIEST = {
         { id = 15266, level = 48, tab = 2, rank = 6, cost = 28000, prev = 15265 }, -- Holy Fire 6
         { id = 1309635, level = 48, tab = 3, rank = 3, prev = 1309633 }, -- Shadow Word: Death 3
         { id = 1277639, level = 50, tab = 1, rank = 4, prev = 1277638 }, -- Contingency Plan 4
-        { id = 14819, level = 50, tab = 1, rank = 3, cost = 1500, prev = 14818 }, -- Divine Spirit 3
+        { id = 14819, level = 50, tab = 1, rank = 3, prev = 14818 }, -- Divine Spirit 3
         { id = 19274, level = 50, tab = 1, rank = 4, prev = 19273, race = 1 }, -- Feedback 4
         { id = 10951, level = 50, tab = 1, rank = 5, cost = 30000, prev = 1006 }, -- Inner Fire 5
         { id = 1240721, level = 50, tab = 1, rank = 3, prev = 1240720, requires = 402174 }, -- Penance 3
@@ -173,7 +173,7 @@ SBE.Data.PRIEST = {
         { id = 19242, level = 50, tab = 2, rank = 6, cost = 1500, prev = 19241 }, -- Desperate Prayer 6
         { id = 1277377, level = 50, tab = 2, rank = 6, prev = 1277376 }, -- Divine Grace 6
         { id = 10916, level = 50, tab = 2, rank = 6, cost = 30000, prev = 10915 }, -- Flash Heal 6
-        { id = 27870, level = 50, tab = 2, rank = 2, cost = 1200, prev = 724 }, -- Lightwell 2
+        { id = 27870, level = 50, tab = 2, rank = 2, prev = 724 }, -- Lightwell 2
         { id = 10960, level = 50, tab = 2, rank = 3, cost = 30000, prev = 996 }, -- Prayer of Healing 3
         { id = 1240826, level = 50, tab = 2, rank = 2, prev = 401859, requires = 401859 }, -- Prayer of Mending 2
         { id = 10928, level = 50, tab = 2, rank = 8, cost = 30000, prev = 10927 }, -- Renew 8
@@ -209,7 +209,7 @@ SBE.Data.PRIEST = {
         { id = 10912, level = 58, tab = 3, rank = 3, cost = 44000, prev = 10911 }, -- Mind Control 3
         { id = 10894, level = 58, tab = 3, rank = 8, cost = 44000, prev = 10893 }, -- Shadow Word: Pain 8
         { id = 1277640, level = 60, tab = 1, rank = 5, prev = 1277639 }, -- Contingency Plan 5
-        { id = 27841, level = 60, tab = 1, rank = 4, cost = 2300, prev = 14819 }, -- Divine Spirit 4
+        { id = 27841, level = 60, tab = 1, rank = 4, prev = 14819 }, -- Divine Spirit 4
         { id = 19275, level = 60, tab = 1, rank = 5, prev = 19274, race = 1 }, -- Feedback 5
         { id = 10952, level = 60, tab = 1, rank = 6, cost = 46000, prev = 10951 }, -- Inner Fire 6
         { id = 1316991, level = 60, tab = 1, rank = 4, prev = 1240721, requires = 402174 }, -- Penance 4
@@ -222,7 +222,7 @@ SBE.Data.PRIEST = {
         { id = 25314, level = 60, tab = 2, rank = 5, book = 21284, prev = 10965 }, -- Greater Heal 5
         { id = 15261, level = 60, tab = 2, rank = 8, cost = 46000, prev = 15267 }, -- Holy Fire 8
         { id = 27801, level = 60, tab = 2, rank = 6, cost = 2300, prev = 27800, requires = 15237 }, -- Holy Nova 6
-        { id = 27871, level = 60, tab = 2, rank = 3, cost = 1500, prev = 27870 }, -- Lightwell 3
+        { id = 27871, level = 60, tab = 2, rank = 3, prev = 27870 }, -- Lightwell 3
         { id = 10961, level = 60, tab = 2, rank = 4, cost = 46000, prev = 10960 }, -- Prayer of Healing 4
         { id = 25316, level = 60, tab = 2, rank = 5, book = 21287, prev = 10961 }, -- Prayer of Healing 5
         { id = 1240827, level = 60, tab = 2, rank = 3, prev = 1240826, requires = 401859 }, -- Prayer of Mending 3

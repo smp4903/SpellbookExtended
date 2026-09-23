@@ -3,7 +3,8 @@
 A World of Warcraft: Forever addon that lists the class spells and ranks you can still learn, in a spellbook-style panel with one header per unlock level.
 
 - Every spell you have not learned yet, levels 1 to 60. Spells above your level are greyed out with the level in red; missed lower ranks stay listed until you learn something higher.
-- Trainer cost on each spell, a cost total per level, and "Trainable now" with the total at the bottom.
+- Trainer cost on each spell (can be hidden), a summary on each level header, and what you can train now with its total at the bottom.
+- On level up, a chat message links the spells the new level unlocked.
 - Class-quest spells (Bear Form, Voidwalker...) and class-book ranks (AQ tomes, Dire Maul codices) are tagged instead of priced.
 - Higher ranks of talent spells (Insect Swarm, Mangle...) only show once you have the talent. Race- and faction-locked spells only show for the right character.
 - Filter by spellbook tab, search by name, and optionally show known spells.
@@ -18,6 +19,7 @@ Open the spellbook: a book button appears on its right edge and opens the panel 
 | `/sbe` | Show or hide the panel |
 | `/sbe dock` | Hover the spellbook and run this if the dock button does not appear |
 | `/sbe auto` | Open the panel together with the spellbook |
+| `/sbe notify` | Turn the level-up chat message on or off |
 | `/sbe debug` | Debug output |
 
 ## Data

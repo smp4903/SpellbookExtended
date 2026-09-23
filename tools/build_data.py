@@ -37,6 +37,7 @@ QUEST_SPELLS = {
     71, 2458, 355,                           # Defensive Stance, Berserker Stance, Taunt
     7328, 23214,                             # Redemption, Summon Charger
     2842, 8681,                              # Poisons, Instant Poison 1
+    5149,                                    # Beast Training
     8071, 3599, 5394,                        # Stoneskin, Searing, Healing Stream Totem 1
 }
 
@@ -49,6 +50,9 @@ RACE_OVERRIDES = {"Desperate Prayer": None, "Devouring Plague": None, "Fear Ward
 
 # Skill lines that are not class trainer purchases.
 SKIP_TABS = {"Beast Training", "Lockpicking"}
+
+# Spells from a skipped skill line that still belong in the list, and the tab to show them on.
+TAB_OVERRIDES = {5149: "Beast Mastery"}
 
 # Rank-less companions of another spell, never a separate purchase.
 SKIP_NAMES = re.compile(r"\((Passive|Bear|Cat)\)$")
@@ -86,6 +90,8 @@ def load_wt(folder):
                     rec["skill"] = int(sk.group(1))
             if rq := re.search(r"requiredIds\s*=\s*\{([^}]*)", rest):
                 rec["needs"] = [int(x) for x in re.findall(r"\d+", rq.group(1))]
+            if "requiredTalentId" in rest:
+                rec["talentRank"] = True
             out.setdefault(f.stem.upper(), {})[sid] = rec
     return out
 
@@ -137,7 +143,8 @@ def build_class(cls, wt, books):
             if not f:
                 continue
             level = f["metrics"]["Level"]
-            if level == 0 or SKIP_NAMES.search(f["name"]) or f["skill"] in SKIP_TABS:
+            skill = TAB_OVERRIDES.get(f["spellID"], f["skill"])
+            if level == 0 or SKIP_NAMES.search(f["name"]) or skill in SKIP_TABS:
                 continue
             in_tree = f["spellID"] in tree_ids or f["name"] in tree_names
             # Classic talents Forever moved to the trainer (Omen of Clarity...).
@@ -146,7 +153,7 @@ def build_class(cls, wt, books):
                 continue
             families[f["name"]].append({
                 "id": f["spellID"], "name": f["name"], "rank": rank_of(f["subtext"]),
-                "level": level, "tab": f["skill"], "extra": bool(group.get("extra")),
+                "level": level, "tab": skill, "extra": bool(group.get("extra")),
                 "classic": pair["classic"] is not None, "passive": f["passive"],
                 "oldTalent": old_talent,
             })
@@ -197,7 +204,10 @@ def build_class(cls, wt, books):
             elif sid in books:
                 row["book"] = books[sid]
             elif sid in wt and "cost" in wt[sid]:
-                row["cost"] = wt[sid]["cost"]
+                # Classic priced talent ranks far below normal spells; that price
+                # no longer applies once Forever sells the spell without the talent.
+                if root or not wt[sid].get("talentRank"):
+                    row["cost"] = wt[sid]["cost"]
             elif (m["classic"] and m["level"] > 1 and not family_wt and not root
                   and not m["oldTalent"] and sid not in TRAINER_SPELLS):
                 dropped.append((name, m["rank"], sid, "classic spell no trainer sells"))
