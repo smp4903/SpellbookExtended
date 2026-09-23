@@ -17,6 +17,7 @@ do -- Private Scope
     local HEADER_HEIGHT = 30
     local SECTION_GAP = 10
     local INSET = 12
+    local PLAN_HEIGHT = 26
 
     -- Parchment palette, matched to the spellbook's page text.
     local INK = { 0.18, 0.10, 0.02 }
@@ -38,6 +39,7 @@ do -- Private Scope
     local Create, CreateChrome, CreateToolbar, CreateFooter, CreateCheckbox, CreateParchment
     local AcquireTile, AcquireHeader, ReleaseAll, Refresh, DrawTile, DrawHeader
     local ShowTooltip, OnTileClick, Colour, SubText, HeaderSummary, Toggle, ShowPanel, HidePanel
+    local CreatePlanBar, DrawPlan, ClearSearch
 
     function Colour(fontString, c)
         fontString:SetTextColor(c[1], c[2], c[3])
@@ -67,8 +69,6 @@ do -- Private Scope
             end
         end)
         panel:SetScript("OnDragStop", panel.StopMovingOrSizing)
-        panel:SetScript("OnShow", Refresh)
-        panel:Hide()
 
         -- Escape closes it like any Blizzard panel.
         table.insert(UISpecialFrames, "SpellbookExtendedPanel")
@@ -76,7 +76,13 @@ do -- Private Scope
         CreateChrome()
         CreateToolbar()
         CreateParchment()
+        CreatePlanBar()
         CreateFooter()
+
+        -- Hooked last: hiding runs OnHide, which needs the widgets above.
+        panel:Hide()
+        panel:SetScript("OnShow", Refresh)
+        panel:SetScript("OnHide", ClearSearch)
 
         return panel
     end
@@ -157,7 +163,7 @@ do -- Private Scope
         end
 
         local scroll = CreateFrame("ScrollFrame", "SpellbookExtendedScrollFrame", page, "UIPanelScrollFrameTemplate")
-        scroll:SetPoint("TOPLEFT", page, "TOPLEFT", INSET, -INSET)
+        scroll:SetPoint("TOPLEFT", page, "TOPLEFT", INSET, -(INSET + PLAN_HEIGHT))
         scroll:SetPoint("BOTTOMRIGHT", page, "BOTTOMRIGHT", -28, INSET)
 
         local content = CreateFrame("Frame", nil, scroll)
@@ -215,10 +221,90 @@ do -- Private Scope
 
         panel.checkboxes = { known, now, other, costs }
 
-        local summary = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        summary:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -16, 16)
-        summary:SetJustifyH("RIGHT")
-        panel.summary = summary
+    end
+
+    -- The gold plan across the top of the page, and "Train all" while a class
+    -- trainer is open.
+    function CreatePlanBar()
+        local page = panel.page
+
+        local train = CreateFrame("Button", nil, page, "UIPanelButtonTemplate")
+        train:SetHeight(22)
+        train:SetPoint("TOPRIGHT", page, "TOPRIGHT", -INSET, -INSET + 4)
+        train:SetScript("OnClick", function() SBE.Trainer.TrainAll() end)
+        train:SetScript("OnEnter", function(self)
+            local plan = SBE.Trainer.Plan()
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText("Train all")
+            GameTooltip:AddLine("Buys every spell the trainer offers that you have not skipped, cheapest first.", 1, 1, 1, true)
+            if (plan.unaffordable > 0) then
+                GameTooltip:AddLine(plan.unaffordable.." more you cannot afford yet.", 1, 0.1, 0.1, true)
+            end
+            GameTooltip:Show()
+        end)
+        train:SetScript("OnLeave", GameTooltip_Hide)
+        train:Hide()
+        panel.train = train
+
+        local text = page:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        text:SetPoint("TOPLEFT", page, "TOPLEFT", INSET + 4, -INSET)
+        text:SetPoint("RIGHT", train, "LEFT", -8, 0)
+        text:SetJustifyH("LEFT")
+        text:SetWordWrap(false)
+        text:SetShadowOffset(0, 0)
+        Colour(text, INK)
+        panel.plan = text
+
+        local rule = page:CreateTexture(nil, "ARTWORK")
+        rule:SetHeight(1)
+        rule:SetPoint("TOPLEFT", page, "TOPLEFT", INSET, -(INSET + PLAN_HEIGHT - 6))
+        rule:SetPoint("TOPRIGHT", page, "TOPRIGHT", -INSET, -(INSET + PLAN_HEIGHT - 6))
+        rule:SetColorTexture(INK_SOFT[1], INK_SOFT[2], INK_SOFT[3], 0.35)
+    end
+
+    function DrawPlan(summary)
+        local showCosts = SBE.options.showCosts
+        local money = GetMoney()
+        local text
+
+        if (summary.trainable > 0) then
+            text = summary.trainable.." to train now"
+            if (showCosts and summary.cost > 0) then
+                local colour = (summary.cost <= money) and "" or "|cffa01408"
+                text = text..": "..colour..SBE.FormatMoney(summary.cost).."|r"
+            end
+        elseif (summary.nextLevel) then
+            text = string.format("Next trainer visit (level %d): %d %s", summary.nextLevel,
+                summary.nextCount, summary.nextCount == 1 and "spell" or "spells")
+            if (showCosts and summary.nextCost > 0) then
+                text = text..", "..SBE.FormatMoney(summary.nextCost)
+            end
+        else
+            text = "Nothing left to train"
+        end
+
+        if (showCosts) then
+            text = text.."  |cff5c3d1f(you have "..SBE.FormatMoney(money)..")|r"
+        end
+        panel.plan:SetText(text)
+
+        local plan = SBE.Trainer.Plan()
+        if (SBE.Trainer.IsOpen() and #plan.services > 0) then
+            local label = "Train all ("..#plan.services..")"
+            panel.train:SetText(label)
+            panel.train:SetWidth(panel.train:GetFontString():GetStringWidth() + 28)
+            panel.train:Show()
+        else
+            panel.train:Hide()
+        end
+    end
+
+    function ClearSearch()
+        if (panel.search:GetText() ~= "") then
+            panel.search:SetText("")
+        end
+        panel.search:ClearFocus()
+        filter.search = ""
     end
 
     function AcquireTile()
@@ -231,7 +317,7 @@ do -- Private Scope
 
         tile = CreateFrame("Button", nil, panel.content)
         tile:SetSize(TILE_WIDTH, TILE_HEIGHT)
-        tile:RegisterForClicks("LeftButtonUp")
+        tile:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
         tile.icon = tile:CreateTexture(nil, "ARTWORK")
         tile.icon:SetSize(ICON_SIZE, ICON_SIZE)
@@ -352,6 +438,9 @@ do -- Private Scope
         if (item.state == SpellList.STATE_KNOWN) then
             return prefix.."Known", INK_FADED
         end
+        if (item.state == SpellList.STATE_SKIPPED) then
+            return prefix.."Skipped", INK_FADED
+        end
         if (entry.quest or entry.book) then
             local source = entry.quest and "Class quest" or "Class book"
             if (item.gated) then
@@ -383,7 +472,7 @@ do -- Private Scope
         tile.sub:SetText(text)
         Colour(tile.sub, colour)
 
-        local dim = item.gated or item.state == SpellList.STATE_KNOWN
+        local dim = item.gated or item.state == SpellList.STATE_KNOWN or item.state == SpellList.STATE_SKIPPED
         tile.icon:SetDesaturated(dim)
         tile.icon:SetAlpha(dim and 0.6 or 1)
         Colour(tile.name, dim and INK_FADED or INK)
@@ -444,15 +533,7 @@ do -- Private Scope
             panel.empty:Hide()
         end
 
-        if (summary.trainable > 0) then
-            local text = summary.trainable.." to train now"
-            if (SBE.options.showCosts and summary.cost > 0) then
-                text = text.."  "..SBE.FormatMoney(summary.cost)
-            end
-            panel.summary:SetText(text)
-        else
-            panel.summary:SetText("Nothing to train right now")
-        end
+        DrawPlan(summary)
     end
 
     function ShowTooltip(tile)
@@ -475,6 +556,10 @@ do -- Private Scope
 
         if (entry.quest) then
             GameTooltip:AddLine("Taught by a class quest", 0.5, 0.75, 1)
+            local hint = SBE.QuestHints and SBE.QuestHints[entry.id]
+            if (hint) then
+                GameTooltip:AddLine(hint, 0.8, 0.8, 0.8, true)
+            end
         elseif (entry.book) then
             local bookName = C_Item.GetItemNameByID(entry.book) or ("item "..entry.book)
             GameTooltip:AddLine("Taught by "..bookName, 0.5, 0.75, 1)
@@ -500,12 +585,31 @@ do -- Private Scope
         if (entry.discovered) then
             GameTooltip:AddLine("Found at your trainer", 0.6, 0.6, 0.6)
         end
+
+        if (item.state == SpellList.STATE_SKIPPED) then
+            if (SBE.options.skipped[entry.id]) then
+                GameTooltip:AddLine("Skipped. Right-click to include it again.", 0.6, 0.6, 0.6, true)
+            else
+                GameTooltip:AddLine("Skipped because an earlier rank is skipped.", 0.6, 0.6, 0.6, true)
+            end
+        elseif (item.state ~= SpellList.STATE_KNOWN and not entry.quest and not entry.book) then
+            GameTooltip:AddLine("Right-click to skip this rank and the ones above it.", 0.6, 0.6, 0.6, true)
+        end
         GameTooltip:Show()
     end
 
-    function OnTileClick(tile)
+    function OnTileClick(tile, button)
         local item = tile.item
         if (not item) then
+            return
+        end
+        if (button == "RightButton") then
+            local entry = item.entry
+            local implicit = item.state == SpellList.STATE_SKIPPED and not SBE.options.skipped[entry.id]
+            if (item.state ~= SpellList.STATE_KNOWN and not entry.quest and not entry.book and not implicit) then
+                SpellList.ToggleSkip(entry.id)
+                ShowTooltip(tile)
+            end
             return
         end
         if (IsModifiedClick("CHATLINK")) then

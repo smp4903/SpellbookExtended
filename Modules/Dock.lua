@@ -99,7 +99,7 @@ do -- Private Scope
             button:Hide()
         end
         local panel = SBE.Panel.Frame()
-        if (panel and panel.dockedTo) then
+        if (panel and panel.dockedTo == target) then
             panel:Hide()
         end
     end
@@ -145,6 +145,40 @@ do -- Private Scope
             if (micro and micro.HookScript) then
                 micro:HookScript("OnClick", function() C_Timer.After(0, Attach) end)
             end
+        end
+    end)
+
+    -- A class trainer visit opens the panel beside the trainer window, where
+    -- "Train all" is, and closes it again when the trainer goes.
+    SBE.On("SBE_TRAINER_SHOW", function()
+        if (not SBE.options.openWithTrainer) then
+            return
+        end
+        local panel = SBE.Panel.Create()
+        if (panel:IsShown()) then
+            return
+        end
+        -- Blizzard creates the trainer window in response to the same event.
+        C_Timer.After(0, function()
+            local trainer = _G.ClassTrainerFrame
+            if (trainer and trainer:IsShown()) then
+                panel:ClearAllPoints()
+                panel:SetPoint("TOPLEFT", trainer, "TOPRIGHT", 4, 0)
+                panel:SetFrameStrata(trainer:GetFrameStrata())
+            end
+            panel.dockedTo = trainer or UIParent
+            panel.openedByTrainer = true
+            panel:Show()
+        end)
+    end)
+    SBE.On("SBE_TRAINER_CLOSED", function()
+        local panel = SBE.Panel.Frame()
+        if (panel and panel.openedByTrainer) then
+            panel.openedByTrainer = nil
+            panel:Hide()
+            panel.dockedTo = nil
+            panel:ClearAllPoints()
+            panel:SetPoint("CENTER")
         end
     end)
 

@@ -13,6 +13,7 @@ do -- Private Scope
     local STATE_FUTURE = "future"
     local STATE_BLOCKED = "blocked" -- level reached, prerequisite missing
     local STATE_OTHER = "other"     -- quest or book, not sold by the trainer
+    local STATE_SKIPPED = "skipped" -- the player chose not to buy it
 
     local classData = nil
     local entries = {}
@@ -21,7 +22,7 @@ do -- Private Scope
     local refreshPending = false
 
     -- Forward declarations: keep these as file-locals so they never leak into _G.
-    local Init, AddEntry, FamilyKnown, IsDone, IsEligible, Level, Cost, StateOf
+    local Init, AddEntry, FamilyKnown, IsDone, IsEligible, IsSkipped, ToggleSkip, Level, Cost, StateOf
     local Build, NewAtLevel, Matches, Discover, RequestData, OnDataLoaded, Changed, Tabs
 
     function Init()
@@ -94,6 +95,26 @@ do -- Private Scope
         return true
     end
 
+    -- Trainers sell ranks in order, so skipping one also skips every rank above it.
+    function IsSkipped(entry)
+        local skipped = SBE.options.skipped
+        local seen = 0
+        while (entry and seen < 30) do
+            if (skipped[entry.id]) then
+                return true
+            end
+            entry = entry.prev and byId[entry.prev]
+            seen = seen + 1
+        end
+        return false
+    end
+
+    function ToggleSkip(id)
+        local skipped = SBE.options.skipped
+        skipped[id] = (not skipped[id]) or nil
+        SBE.Fire("SBE_CHANGED")
+    end
+
     function Level(entry)
         local live = SBE.GetSpellLevelLearned(entry.id)
         if (live) then
@@ -113,6 +134,9 @@ do -- Private Scope
         end
         if (entry.quest or entry.book) then
             return STATE_OTHER
+        end
+        if (IsSkipped(entry)) then
+            return STATE_SKIPPED
         end
         if (level > playerLevel) then
             return STATE_FUTURE
@@ -142,12 +166,13 @@ do -- Private Scope
     end
 
     -- Returns sections sorted by level, each { level, items, count, trainable,
-    -- cost, trainableCost }, plus a summary of what can be bought right now.
+    -- cost, trainableCost }, plus a summary for the gold plan. The summary
+    -- ignores the search and tab filters: the budget is the same either way.
     function Build(filter)
         local options = SBE.options
         local playerLevel = UnitLevel("player")
         local sections, byLevel = {}, {}
-        local summary = { trainable = 0, cost = 0, total = 0 }
+        local summary = { trainable = 0, cost = 0, total = 0, nextLevel = nil, nextCount = 0, nextCost = 0 }
 
         for _, entry in ipairs(entries) do
             if (IsEligible(entry)) then
@@ -160,8 +185,22 @@ do -- Private Scope
                     and (state ~= STATE_OTHER or options.showQuestAndBook)
                     and (not options.trainableOnly or state == STATE_TRAINABLE)
 
-                if (state ~= STATE_KNOWN) then
+                if (state ~= STATE_KNOWN and state ~= STATE_SKIPPED) then
                     summary.total = summary.total + 1
+                end
+
+                local cost = Cost(entry)
+                if (state == STATE_TRAINABLE) then
+                    summary.trainable = summary.trainable + 1
+                    summary.cost = summary.cost + (cost or 0)
+                elseif (state == STATE_FUTURE) then
+                    if (not summary.nextLevel or level < summary.nextLevel) then
+                        summary.nextLevel, summary.nextCount, summary.nextCost = level, 0, 0
+                    end
+                    if (level == summary.nextLevel) then
+                        summary.nextCount = summary.nextCount + 1
+                        summary.nextCost = summary.nextCost + (cost or 0)
+                    end
                 end
 
                 if (visible) then
@@ -172,13 +211,12 @@ do -- Private Scope
                         table.insert(sections, section)
                     end
 
-                    local cost = Cost(entry)
                     table.insert(section.items, {
                         entry = entry, name = name, level = level, state = state, cost = cost,
                         gated = level > playerLevel,
                     })
 
-                    if (state ~= STATE_KNOWN) then
+                    if (state ~= STATE_KNOWN and state ~= STATE_SKIPPED) then
                         section.count = section.count + 1
                         if (state ~= STATE_OTHER) then
                             section.cost = section.cost + (cost or 0)
@@ -187,8 +225,6 @@ do -- Private Scope
                     if (state == STATE_TRAINABLE) then
                         section.trainable = section.trainable + 1
                         section.trainableCost = section.trainableCost + (cost or 0)
-                        summary.trainable = summary.trainable + 1
-                        summary.cost = summary.cost + (cost or 0)
                     end
                 end
             end
@@ -283,6 +319,23 @@ do -- Private Scope
 
     SpellList.Build = Build
     SpellList.NewAtLevel = NewAtLevel
+    -- For trainer rows whose spell ID the client does not reveal.
+    SpellList.FindByName = function(name, subtext)
+        local rank = tonumber((subtext or ""):match("(%d+)"))
+        for _, entry in ipairs(entries) do
+            if (SBE.GetSpellName(entry.id) == name and entry.rank == rank) then
+                return entry.id
+            end
+        end
+        return nil
+    end
+    SpellList.ToggleSkip = ToggleSkip
+    SpellList.IsSkipped = function(id) return byId[id] ~= nil and IsSkipped(byId[id]) end
+    SpellList.IsTrainable = function(id)
+        local entry = byId[id]
+        return entry ~= nil and IsEligible(entry)
+            and StateOf(entry, Level(entry), UnitLevel("player")) == STATE_TRAINABLE
+    end
     SpellList.Discover = Discover
     SpellList.Changed = Changed
     SpellList.Tabs = Tabs
@@ -293,4 +346,5 @@ do -- Private Scope
     SpellList.STATE_FUTURE = STATE_FUTURE
     SpellList.STATE_BLOCKED = STATE_BLOCKED
     SpellList.STATE_OTHER = STATE_OTHER
+    SpellList.STATE_SKIPPED = STATE_SKIPPED
 end

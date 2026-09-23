@@ -18,6 +18,7 @@ Data\Shaman.lua
 Data\Mage.lua
 Data\Warlock.lua
 Data\Druid.lua
+Data\QuestHints.lua
 
 Modules\SpellList.lua
 Modules\Trainer.lua

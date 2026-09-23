@@ -14,6 +14,7 @@ do -- Private Scope
         ["showCosts"] = true,
         ["notifyLevelUp"] = true,
         ["autoOpen"] = false,
+        ["openWithTrainer"] = true,
         ["tab"] = 0,
     }
 
@@ -32,6 +33,7 @@ do -- Private Scope
             end
         end
 
+        SpellbookExtended_Options.skipped = SpellbookExtended_Options.skipped or {}
         SpellbookExtended_TrainerCache = SpellbookExtended_TrainerCache or {}
         SBE.options = SpellbookExtended_Options
     end

@@ -5,7 +5,10 @@ A World of Warcraft: Forever addon that lists the class spells and ranks you can
 - Every spell you have not learned yet, levels 1 to 60. Spells above your level are greyed out with the level in red; missed lower ranks stay listed until you learn something higher.
 - Trainer cost on each spell (can be hidden), a summary on each level header, and what you can train now with its total at the bottom.
 - On level up, a chat message links the spells the new level unlocked.
-- Class-quest spells (Bear Form, Voidwalker...) and class-book ranks (AQ tomes, Dire Maul codices) are tagged instead of priced.
+- A gold plan at the top: what training costs now, or at your next trainer visit, against the money you carry.
+- Right-click a spell to skip it (and the ranks above it); skipped spells drop out of every total.
+- Talking to your class trainer opens the panel beside the trainer window with a "Train all" button that buys everything you have not skipped, cheapest first.
+- Class-quest spells (Bear Form, Voidwalker...) and class-book ranks (AQ tomes, Dire Maul codices) are tagged instead of priced; quest spells say where the quest starts.
 - Higher ranks of talent spells (Insect Swarm, Mangle...) only show once you have the talent. Race- and faction-locked spells only show for the right character.
 - Filter by spellbook tab, search by name, and optionally show known spells.
 - Shift-click a spell to link it in chat.
@@ -20,6 +23,7 @@ Open the spellbook: a book button appears on its right edge and opens the panel 
 | `/sbe dock` | Hover the spellbook and run this if the dock button does not appear |
 | `/sbe auto` | Open the panel together with the spellbook |
 | `/sbe notify` | Turn the level-up chat message on or off |
+| `/sbe trainer` | Turn opening with the class trainer on or off |
 | `/sbe debug` | Debug output |
 
 ## Data
@@ -44,7 +48,7 @@ python3 tools/build_data.py \
 
 ## Known limits
 
-- The beta client does not load SavedVariables, so options and trainer prices reset on each launch until Blizzard fixes that.
+- The beta client does not load SavedVariables, so options, skipped spells and trainer prices reset on each launch until Blizzard fixes that.
 - Costs are Classic prices until you visit a trainer. Spells new in Forever show "Trainer" with no price until then.
 - Quest-taught spells are a hand-kept list in `tools/build_data.py`.
 - The spellbook frame name is guessed from a list of candidates; `/sbe dock` covers the case where the guess is wrong.
