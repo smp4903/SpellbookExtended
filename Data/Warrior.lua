@@ -3,18 +3,19 @@
 local _, SBE = ...
 
 SBE.Data.WARRIOR = {
-    tabs = { "Arms", "Fury", "Protection" },
+    tabs = { "Arms", "Fury", "Protection", "General" },
     spells = {
         { id = 6673, level = 1, tab = 2, rank = 1, cost = 10 }, -- Battle Shout 1
         { id = 100, level = 4, tab = 1, rank = 1, cost = 100 }, -- Charge 1
         { id = 772, level = 4, tab = 1, rank = 1, cost = 100 }, -- Rend 1
         { id = 6343, level = 6, tab = 1, rank = 1, cost = 100 }, -- Thunder Clap 1
+        { id = 3127, level = 6, tab = 4, cost = 100, general = true }, -- Parry
         { id = 1715, level = 8, tab = 1, rank = 1, cost = 200 }, -- Hamstring 1
         { id = 284, level = 8, tab = 1, rank = 2, cost = 200, prev = 78 }, -- Heroic Strike 2
         { id = 6546, level = 10, tab = 1, rank = 2, cost = 600, prev = 772 }, -- Rend 2
         { id = 2687, level = 10, tab = 3, cost = 600 }, -- Bloodrage
         { id = 71, level = 10, tab = 3, quest = true }, -- Defensive Stance
-        { id = 7386, level = 10, tab = 3, rank = 1 }, -- Sunder Armor 1
+        { id = 7386, level = 10, tab = 3, rank = 1, quest = true }, -- Sunder Armor 1
         { id = 355, level = 10, tab = 3, quest = true }, -- Taunt
         { id = 7384, level = 12, tab = 1, rank = 1, cost = 1000 }, -- Overpower 1
         { id = 5242, level = 12, tab = 2, rank = 2, cost = 1000, prev = 6673 }, -- Battle Shout 2
@@ -31,6 +32,7 @@ SBE.Data.WARRIOR = {
         { id = 20230, level = 20, tab = 1, cost = 4000 }, -- Retaliation
         { id = 845, level = 20, tab = 2, rank = 1, cost = 4000 }, -- Cleave 1
         { id = 1240193, level = 20, tab = 2, rank = 1 }, -- Slam 1
+        { id = 674, level = 20, tab = 4, cost = 4000, general = true }, -- Dual Wield
         { id = 6192, level = 22, tab = 2, rank = 3, cost = 6000, prev = 5242 }, -- Battle Shout 3
         { id = 5246, level = 22, tab = 2, cost = 6000 }, -- Intimidating Shout
         { id = 7405, level = 22, tab = 3, rank = 2, cost = 6000, prev = 7386 }, -- Sunder Armor 2
@@ -67,6 +69,7 @@ SBE.Data.WARRIOR = {
         { id = 11572, level = 40, tab = 1, rank = 5, cost = 22000, prev = 6548 }, -- Rend 5
         { id = 11608, level = 40, tab = 2, rank = 3, cost = 22000, prev = 7369 }, -- Cleave 3
         { id = 20660, level = 40, tab = 2, rank = 3, cost = 22000, prev = 20658 }, -- Execute 3
+        { id = 750, level = 40, tab = 4, cost = 22000, general = true }, -- Plate Mail
         { id = 11550, level = 42, tab = 2, rank = 5, cost = 32000, prev = 11549 }, -- Battle Shout 5
         { id = 20616, level = 42, tab = 2, rank = 2, prev = 20252 }, -- Intercept 2
         { id = 11584, level = 44, tab = 1, rank = 3, cost = 34000, prev = 7887 }, -- Overpower 3

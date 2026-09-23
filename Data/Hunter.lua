@@ -3,13 +3,14 @@
 local _, SBE = ...
 
 SBE.Data.HUNTER = {
-    tabs = { "Beast Mastery", "Marksmanship", "Survival" },
+    tabs = { "Beast Mastery", "Marksmanship", "Survival", "General" },
     spells = {
         { id = 1494, level = 1, tab = 3, cost = 10 }, -- Track Beasts
         { id = 13163, level = 4, tab = 1, cost = 100 }, -- Aspect of the Monkey
         { id = 1978, level = 4, tab = 2, rank = 1, cost = 100 }, -- Serpent Sting 1
         { id = 3044, level = 6, tab = 2, rank = 1, cost = 100 }, -- Arcane Shot 1
         { id = 1130, level = 6, tab = 2, rank = 1, cost = 100 }, -- Hunter's Mark 1
+        { id = 3127, level = 8, tab = 4, cost = 200, general = true }, -- Parry
         { id = 5116, level = 8, tab = 2, cost = 200 }, -- Concussive Shot
         { id = 14260, level = 8, tab = 3, rank = 2, cost = 200, prev = 2973 }, -- Raptor Strike 2
         { id = 13165, level = 10, tab = 1, rank = 1, cost = 400 }, -- Aspect of the Hawk 1
@@ -37,6 +38,7 @@ SBE.Data.HUNTER = {
         { id = 19884, level = 18, tab = 3, cost = 2000 }, -- Track Undead
         { id = 5118, level = 20, tab = 1, cost = 2200 }, -- Aspect of the Cheetah
         { id = 3111, level = 20, tab = 1, rank = 2, cost = 2200, prev = 136 }, -- Mend Pet 2
+        { id = 674, level = 20, tab = 4, cost = 2200, general = true }, -- Dual Wield
         { id = 19434, level = 20, tab = 2, rank = 1 }, -- Aimed Shot 1
         { id = 14282, level = 20, tab = 2, rank = 3, cost = 2200, prev = 14281 }, -- Arcane Shot 3
         { id = 14274, level = 20, tab = 2, rank = 2, cost = 2200, prev = 20736 }, -- Distracting Shot 2
@@ -80,6 +82,7 @@ SBE.Data.HUNTER = {
         { id = 14267, level = 38, tab = 3, rank = 2, cost = 16000, prev = 2974 }, -- Wing Clip 2
         { id = 1299445, level = 40, tab = 1, rank = 2, prev = 13161 }, -- Aspect of the Beast 2
         { id = 13159, level = 40, tab = 1, cost = 18000 }, -- Aspect of the Pack
+        { id = 8737, level = 40, tab = 4, cost = 18000, general = true }, -- Mail
         { id = 15630, level = 40, tab = 2, rank = 4, cost = 18000, prev = 15629 }, -- Distracting Shot 4
         { id = 14324, level = 40, tab = 2, rank = 3, cost = 18000, prev = 14323 }, -- Hunter's Mark 3
         { id = 19506, level = 40, tab = 2, rank = 3, prev = 1299348, requires = 1299346 }, -- Trueshot Aura 3

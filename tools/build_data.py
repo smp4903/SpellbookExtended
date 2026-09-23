@@ -34,7 +34,7 @@ QUEST_SPELLS = {
     5487, 1066, 6795, 6807,                  # Bear Form, Aquatic Form, Growl, Maul 1
     697, 712, 691, 23161,                    # Voidwalker, Succubus, Felhunter, Dreadsteed
     1515, 883, 2641, 6991, 982,              # Tame Beast, Call/Dismiss/Feed/Revive Pet
-    71, 2458, 355,                           # Defensive Stance, Berserker Stance, Taunt
+    71, 355, 7386, 2458,                     # Defensive Stance, Taunt, Sunder Armor 1, Berserker Stance
     7328, 23214,                             # Redemption, Summon Charger
     2842, 8681,                              # Poisons, Instant Poison 1
     5149,                                    # Beast Training
@@ -47,6 +47,10 @@ TRAINER_SPELLS = {8946, 18960, 5502, 6346, 2651}
 # Forever changed which races learn these (foreverchanges.pro "Other races").
 # None lifts the Classic restriction.
 RACE_OVERRIDES = {"Desperate Prayer": None, "Devouring Plague": None, "Fear Ward": None, "Elune's Grace": 4}
+
+# Class trainer purchases outside the class skill lines (Defense, armor and
+# Dual Wield), taken from the Classic trainer lists. Shown on a General tab.
+GENERAL_SPELLS = {"Parry", "Dual Wield", "Plate Mail", "Mail"}
 
 # Skill lines that are not class trainer purchases.
 SKIP_TABS = {"Beast Training", "Lockpicking"}
@@ -68,17 +72,24 @@ def load_forever(path):
 
 
 def load_wt(folder):
-    """class token -> spellID -> {cost, race, faction}"""
+    """class token -> spellID -> {level, cost, race, faction, ...}"""
     out = {}
+    header = re.compile(r"\[(\d+)\]\s*=\s*\{")
     entry = re.compile(r"\{\s*id\s*=\s*(\d+)((?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*)\}", re.S)
     for f in Path(folder).glob("*.lua"):
         if f.stem in ("HunterPets", "WarlockTomes"):
             continue
         body = f.read_text(encoding="utf-8")
         body = body[body.find("SpellsByLevel"):]
+        levels = [(h.start(), int(h.group(1))) for h in header.finditer(body)]
         for m in entry.finditer(body):
             sid, rest = int(m.group(1)), m.group(2)
-            rec = {}
+            level = None
+            for pos, lv in levels:
+                if pos > m.start():
+                    break
+                level = lv
+            rec = {"level": level}
             if c := re.search(r"cost\s*=\s*(\d+)", rest):
                 rec["cost"] = int(c.group(1))
             if r := re.search(r"race\s*=\s*(\d+)", rest):
@@ -96,12 +107,14 @@ def load_wt(folder):
     return out
 
 
-def load_books(path):
-    """spellID -> itemID of an uncommon-or-better class book that teaches it."""
-    if not path:
-        return {}
+def load_snapshot(path):
     import gzip
-    items = json.load(gzip.open(path))["items"]
+    return json.load(gzip.open(path)) if path else {"items": {}, "spells": {}}
+
+
+def load_books(snapshot):
+    """spellID -> itemID of an uncommon-or-better class book that teaches it."""
+    items = snapshot["items"]
     out = {}
     for item_id, item in items.items():
         if item.get("c") != 9 or item.get("q", 0) < 2:
@@ -127,7 +140,7 @@ def rank_of(subtext):
     return int(m.group(1)) if m else 0
 
 
-def build_class(cls, wt, books):
+def build_class(cls, wt, books, spells):
     token, label = CLASSES[cls["id"]]
     wt = wt.get(token, {})
     tree_ids, tree_names = talent_tree(cls)
@@ -149,7 +162,12 @@ def build_class(cls, wt, books):
             in_tree = f["spellID"] in tree_ids or f["name"] in tree_names
             # Classic talents Forever moved to the trainer (Omen of Clarity...).
             old_talent = f["name"] in classic_tree_names and not in_tree
-            if f["passive"] and f["spellID"] not in wt and not old_talent:
+            # Passives: keep trainer-sold ones and ones new in Forever (Tactical
+            # Mastery...); drop proc records and stance companions.
+            new_in_forever = pair["classic"] is None and not group.get("extra")
+            if f["passive"] and f["spellID"] not in wt and not old_talent and not new_in_forever:
+                continue
+            if f["passive"] and f["name"].endswith("Passive"):
                 continue
             families[f["name"]].append({
                 "id": f["spellID"], "name": f["name"], "rank": rank_of(f["subtext"]),
@@ -226,6 +244,15 @@ def build_class(cls, wt, books):
             prev = sid
             rows.append(row)
 
+    known_ids = {m["id"] for members in families.values() for m in members}
+    for sid, rec in wt.items():
+        name = spells.get(str(sid), {}).get("n")
+        if name in GENERAL_SPELLS and sid not in known_ids and rec.get("level"):
+            row = {"id": sid, "name": name, "rank": 0, "level": rec["level"], "tab": "General", "general": True}
+            if "cost" in rec:
+                row["cost"] = rec["cost"]
+            rows.append(row)
+
     rows.sort(key=lambda r: (r["level"], r["tab"], r["name"], r["rank"]))
     return token, label, rows, dropped, [t["name"] for t in cls["trees"]]
 
@@ -238,6 +265,8 @@ def emit(token, label, rows, build, trees):
     # Spellbook order: talent tree order first (skill lines may carry a longer
     # name, "Shadow Magic" for the Shadow tree), then anything else.
     def order(skill):
+        if skill == "General":
+            return (len(trees) + 1, skill)
         for i, tree in enumerate(trees):
             if skill.startswith(tree) or tree.startswith(skill):
                 return (i, skill)
@@ -263,7 +292,7 @@ def emit(token, label, rows, build, trees):
             fields.append(f"needs = {{ {', '.join(str(n) for n in r['needs'])} }}")
         if "faction" in r:
             fields.append(f"faction = {lua_string(r['faction'])}")
-        for key in ("quest",):
+        for key in ("quest", "general"):
             if r.get(key):
                 fields.append(f"{key} = true")
         rank = f" {r['rank']}" if r["rank"] else ""
@@ -283,11 +312,12 @@ def main():
 
     data = load_forever(args.forever)
     wt = load_wt(args.wt)
-    books = load_books(args.items)
+    snapshot = load_snapshot(args.items)
+    books = load_books(snapshot)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     for cls in data["classes"]:
-        token, label, rows, dropped, tabs = build_class(cls, wt, books)
+        token, label, rows, dropped, tabs = build_class(cls, wt, books, snapshot["spells"])
         (out / f"{label}.lua").write_text(emit(token, label, rows, data["build"], tabs), encoding="utf-8")
         print(f"{label:8} {len(rows):4} spells, {len(dropped):3} dropped")
         if args.report:

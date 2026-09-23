@@ -18,6 +18,16 @@ do -- Private Scope
     local SECTION_GAP = 10
     local INSET = 12
     local PLAN_HEIGHT = 26
+    local TAB_SIZE = 35
+    local TAB_GAP = 12
+    -- The spellbook's own tab artwork: frames 42x38 around a 35x35 icon.
+    local TAB_ATLAS = "spellbook-Tab-Frame-C60"
+    local TAB_ATLAS_ACTIVE = "spellbook-Tab-Frame-Glow-C60"
+    local TAB_ATLAS_GLOW = "spellbook-Tab-Frame-glow-gradient-C60"
+    local TAB_FRAME_RAISE = 2 -- the frame's opening sits above its centre
+    -- A scroll: the General tab already shows the spellbook's book.
+    local ALL_ICON = "Interface\\Icons\\INV_Scroll_03"
+    local WEAPONS_ICON = "Interface\\Icons\\INV_Sword_04"
 
     -- Parchment palette, matched to the spellbook's page text.
     local INK = { 0.18, 0.10, 0.02 }
@@ -38,8 +48,8 @@ do -- Private Scope
     -- Forward declarations: keep these as file-locals so they never leak into _G.
     local Create, CreateChrome, CreateToolbar, CreateFooter, CreateCheckbox, CreateParchment
     local AcquireTile, AcquireHeader, ReleaseAll, Refresh, DrawTile, DrawHeader
-    local ShowTooltip, OnTileClick, Colour, SubText, HeaderSummary, Toggle, ShowPanel, HidePanel
-    local CreatePlanBar, DrawPlan, ClearSearch
+    local ShowTooltip, OnTileClick, Colour, SubText, HeaderSummary, Toggle, ShowPanel
+    local CreatePlanBar, DrawPlan, ClearSearch, TabIcon, CreateTabFrame
 
     function Colour(fontString, c)
         fontString:SetTextColor(c[1], c[2], c[3])
@@ -100,8 +110,57 @@ do -- Private Scope
         end
     end
 
+    -- Icon tabs like the spellbook's own, so any number of tabs fits beside the
+    -- search box; the active tab's name is written after them.
+    function TabIcon(index, name)
+        if (index == 0) then
+            return ALL_ICON
+        end
+        if (name == "Weapons") then
+            return WEAPONS_ICON
+        end
+        if (C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines) then
+            for line = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+                local info = C_SpellBook.GetSpellBookSkillLineInfo(line)
+                if (info and info.name == name and info.iconID) then
+                    return info.iconID
+                end
+            end
+        end
+        return SpellList.TabIcon(index) or 134400
+    end
+
+    -- Falls back to an additive glow if this client lacks the spellbook atlases.
+    function CreateTabFrame(button, icon)
+        local hasAtlas = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(TAB_ATLAS)
+        local width, height = TAB_SIZE * 42 / 35, TAB_SIZE * 38 / 35
+
+        local function layer(atlas, fallback, sublevel)
+            local texture = button:CreateTexture(nil, "ARTWORK", nil, sublevel or 1)
+            if (hasAtlas) then
+                texture:SetAtlas(atlas)
+                texture:SetSize(width, height)
+                texture:SetPoint("CENTER", icon, "CENTER", 0, TAB_FRAME_RAISE)
+            elseif (fallback) then
+                texture:SetAllPoints(icon)
+                texture:SetTexture(fallback)
+                texture:SetBlendMode("ADD")
+            end
+            texture:Hide()
+            return texture
+        end
+
+        -- Trim the icon's own bevel; the frame supplies the edge.
+        local trim = hasAtlas and 0.05 or 0.07
+        icon:SetTexCoord(trim, 1 - trim, trim, 1 - trim)
+        button.frame = layer(TAB_ATLAS)
+        button.activeFrame = layer(TAB_ATLAS_ACTIVE, "Interface\\Buttons\\CheckButtonHilight")
+        -- Behind the icon: it glows out around the frame instead of tinting the icon.
+        button.activeGlow = layer(TAB_ATLAS_GLOW, nil, -1)
+    end
+
     function CreateToolbar()
-        local tabs = { "All" }
+        local tabs = { "All spells" }
         for _, name in ipairs(SpellList.Tabs()) do
             table.insert(tabs, name)
         end
@@ -109,27 +168,46 @@ do -- Private Scope
         panel.tabButtons = {}
         local previous = nil
         for index, label in ipairs(tabs) do
-            local button = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-            button:SetText(label)
-            button:SetSize(math.max(60, button:GetFontString():GetStringWidth() + 24), 22)
+            local button = CreateFrame("Button", nil, panel)
+            button:SetSize(TAB_SIZE, TAB_SIZE)
             if (previous) then
-                button:SetPoint("LEFT", previous, "RIGHT", 4, 0)
+                button:SetPoint("LEFT", previous, "RIGHT", TAB_GAP, 0)
             else
                 button:SetPoint("TOPLEFT", panel, "TOPLEFT", 66, -32)
             end
+
+            -- A pixel inside the frame's opening, so no icon corner shows past it.
+            local icon = button:CreateTexture(nil, "ARTWORK", nil, 0)
+            icon:SetPoint("TOPLEFT", 1, -1)
+            icon:SetPoint("BOTTOMRIGHT", -1, 1)
+            icon:SetTexture(TabIcon(index - 1, label))
+            button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+            CreateTabFrame(button, icon)
+
             button:SetScript("OnClick", function()
                 filter.tab = index - 1
                 SBE.options.tab = filter.tab
                 Refresh()
             end)
+            button:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+                GameTooltip:SetText(label)
+                GameTooltip:Show()
+            end)
+            button:SetScript("OnLeave", GameTooltip_Hide)
             button.tabIndex = index - 1
+            button.label = label
             table.insert(panel.tabButtons, button)
             previous = button
         end
 
+        local tabLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        tabLabel:SetPoint("LEFT", previous, "RIGHT", 10, 0)
+        panel.tabLabel = tabLabel
+
         local search = CreateFrame("EditBox", nil, panel, "SearchBoxTemplate")
-        search:SetSize(180, 20)
-        search:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -16, -33)
+        search:SetSize(170, 20)
+        search:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -16, -36)
         search:HookScript("OnTextChanged", function(self)
             filter.search = self:GetText() or ""
             Refresh()
@@ -141,8 +219,12 @@ do -- Private Scope
     end
 
     function CreateParchment()
-        local page = CreateFrame("Frame", nil, panel)
-        page:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -62)
+        -- The inset's bevelled edge separates the header from the parchment.
+        local ok, page = pcall(CreateFrame, "Frame", nil, panel, "InsetFrameTemplate")
+        if (not ok) then
+            page = CreateFrame("Frame", nil, panel)
+        end
+        page:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -67)
         page:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -8, 40)
         panel.page = page
 
@@ -219,7 +301,10 @@ do -- Private Scope
         local costs = CreateCheckbox("Show costs", "showCosts", "Show the trainer price on each spell and in the level summaries.")
         costs:SetPoint("LEFT", other.label, "RIGHT", 12, 0)
 
-        panel.checkboxes = { known, now, other, costs }
+        local auto = CreateCheckbox("Open with spellbook", "autoOpen", "Open this panel whenever you open the spellbook.")
+        auto:SetPoint("LEFT", costs.label, "RIGHT", 12, 0)
+
+        panel.checkboxes = { known, now, other, costs, auto }
 
     end
 
@@ -396,6 +481,14 @@ do -- Private Scope
     end
 
     function DrawHeader(header, section, playerLevel)
+        if (section.weapons) then
+            header.title:SetText("Weapon Skills")
+            header.note:SetText("From weapon masters")
+            Colour(header.note, INK_FADED)
+            header.cost:SetText(HeaderSummary(section, playerLevel))
+            return
+        end
+
         header.title:SetText("Level "..section.level)
 
         if (section.level <= playerLevel) then
@@ -413,7 +506,9 @@ do -- Private Scope
     -- Reached levels count what can be bought now; later ones count what is coming.
     function HeaderSummary(section, playerLevel)
         local count, cost, noun
-        if (section.level <= playerLevel) then
+        if (section.weapons) then
+            count, cost, noun = section.trainable, section.trainableCost, "to learn"
+        elseif (section.level <= playerLevel) then
             count, cost, noun = section.trainable, section.trainableCost, "to train"
         else
             count, cost = section.count, section.cost
@@ -484,10 +579,12 @@ do -- Private Scope
         end
 
         for _, button in ipairs(panel.tabButtons) do
-            if (button.tabIndex == filter.tab) then
-                button:LockHighlight()
-            else
-                button:UnlockHighlight()
+            local active = button.tabIndex == filter.tab
+            button.frame:SetShown(not active)
+            button.activeFrame:SetShown(active)
+            button.activeGlow:SetShown(active)
+            if (active) then
+                panel.tabLabel:SetText(button.label)
             end
         end
         for _, cb in ipairs(panel.checkboxes) do
@@ -554,6 +651,20 @@ do -- Private Scope
         end
         GameTooltip:AddLine("Learned at level "..item.level, r, g, b)
 
+        if (entry.weapon) then
+            for _, master in ipairs(SBE.Weapons.MastersFor(entry.id)) do
+                GameTooltip:AddDoubleLine(master.name, master.city, 1, 1, 1, 0.8, 0.8, 0.8)
+            end
+            if (item.cost) then
+                GameTooltip:AddLine("Cost: "..SBE.FormatMoney(item.cost), 1, 1, 1)
+            end
+            if (item.state ~= SpellList.STATE_KNOWN) then
+                GameTooltip:AddLine("Click to pin the weapon master on your map.", 0.6, 0.6, 0.6, true)
+            end
+            GameTooltip:Show()
+            return
+        end
+
         if (entry.quest) then
             GameTooltip:AddLine("Taught by a class quest", 0.5, 0.75, 1)
             local hint = SBE.QuestHints and SBE.QuestHints[entry.id]
@@ -617,6 +728,8 @@ do -- Private Scope
             if (link) then
                 ChatEdit_InsertLink(link)
             end
+        elseif (item.entry.weapon and item.state ~= SpellList.STATE_KNOWN) then
+            SBE.Weapons.Pin(item.entry.id)
         end
     end
 
@@ -625,11 +738,6 @@ do -- Private Scope
         panel:Show()
     end
 
-    function HidePanel()
-        if (panel) then
-            panel:Hide()
-        end
-    end
 
     function Toggle()
         Create()
@@ -647,8 +755,6 @@ do -- Private Scope
 
     Panel.Create = Create
     Panel.Show = ShowPanel
-    Panel.Hide = HidePanel
     Panel.Toggle = Toggle
-    Panel.Refresh = Refresh
     Panel.Frame = function() return panel end
 end

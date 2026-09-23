@@ -12,6 +12,7 @@ SBE.QuestHints = {
     [6991] = HUNTER_PET, [982] = HUNTER_PET, [5149] = HUNTER_PET,
     [71] = "Level 10 quest from your warrior trainer.",
     [355] = "Learned along with Defensive Stance.",
+    [7386] = "Learned along with Defensive Stance.",
     [2458] = "Level 30 quest from your warrior trainer.",
     [697] = "Level 10 quest from your warlock trainer.",
     [712] = "Level 20 quest from your warlock trainer.",

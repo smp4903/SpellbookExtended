@@ -1,0 +1,7 @@
+local ns = dofile("harness.lua")
+Login("PRIEST", 20, {}, 1)
+local items = ListState()
+check(items[13896] ~= nil, "Feedback shown to a human priest")
+check(items[10797] == nil, "Starshards hidden from a human priest")
+check(items[6346] ~= nil, "Fear Ward open to all races in Forever")
+done()

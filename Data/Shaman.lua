@@ -3,7 +3,7 @@
 local _, SBE = ...
 
 SBE.Data.SHAMAN = {
-    tabs = { "Elemental Combat", "Enhancement", "Restoration" },
+    tabs = { "Elemental Combat", "Enhancement", "Restoration", "General" },
     spells = {
         { id = 8017, level = 1, tab = 2, rank = 1, cost = 10 }, -- Rockbiter Weapon 1
         { id = 8042, level = 4, tab = 1, rank = 1, cost = 100 }, -- Earth Shock 1
@@ -103,6 +103,7 @@ SBE.Data.SHAMAN = {
         { id = 6365, level = 40, tab = 1, rank = 4, cost = 12000, prev = 6364 }, -- Searing Totem 4
         { id = 8134, level = 40, tab = 2, rank = 5, cost = 12000, prev = 945 }, -- Lightning Shield 5
         { id = 8235, level = 40, tab = 2, rank = 2, cost = 12000, prev = 8232 }, -- Windfury Weapon 2
+        { id = 8737, level = 40, tab = 4, cost = 12000, general = true }, -- Mail
         { id = 1064, level = 40, tab = 3, rank = 1, cost = 12000 }, -- Chain Heal 1
         { id = 6377, level = 40, tab = 3, rank = 3, cost = 12000, prev = 6375 }, -- Healing Stream Totem 3
         { id = 8005, level = 40, tab = 3, rank = 7, cost = 12000, prev = 959 }, -- Healing Wave 7

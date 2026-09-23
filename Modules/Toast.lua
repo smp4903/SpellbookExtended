@@ -191,5 +191,4 @@ do -- Private Scope
     end
 
     Toast.Show = Show
-    Toast.Hide = function() if (frame) then frame:Hide() end end
 end

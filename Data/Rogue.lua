@@ -3,7 +3,7 @@
 local _, SBE = ...
 
 SBE.Data.ROGUE = {
-    tabs = { "Assassination", "Combat", "Subtlety", "Poisons" },
+    tabs = { "Assassination", "Combat", "Subtlety", "Poisons", "General" },
     spells = {
         { id = 1784, level = 1, tab = 3, rank = 1, cost = 10 }, -- Stealth 1
         { id = 53, level = 4, tab = 2, rank = 1, cost = 100 }, -- Backstab 1
@@ -14,9 +14,11 @@ SBE.Data.ROGUE = {
         { id = 5277, level = 8, tab = 2, cost = 200 }, -- Evasion
         { id = 5171, level = 10, tab = 1, rank = 1, cost = 300 }, -- Slice and Dice 1
         { id = 2983, level = 10, tab = 2, rank = 1, cost = 300 }, -- Sprint 1
+        { id = 674, level = 10, tab = 5, cost = 300, general = true }, -- Dual Wield
         { id = 6770, level = 10, tab = 3, rank = 1, cost = 300 }, -- Sap 1
         { id = 2589, level = 12, tab = 2, rank = 2, cost = 800, prev = 53 }, -- Backstab 2
         { id = 1766, level = 12, tab = 2, rank = 1, cost = 800 }, -- Kick 1
+        { id = 3127, level = 12, tab = 5, cost = 800, general = true }, -- Parry
         { id = 8647, level = 14, tab = 1, rank = 1, cost = 1200 }, -- Expose Armor 1
         { id = 703, level = 14, tab = 1, rank = 1, cost = 1200 }, -- Garrote 1
         { id = 1758, level = 14, tab = 2, rank = 3, cost = 1200, prev = 1757 }, -- Sinister Strike 3
@@ -46,6 +48,7 @@ SBE.Data.ROGUE = {
         { id = 6768, level = 28, tab = 2, rank = 2, cost = 8000, prev = 1966 }, -- Feint 2
         { id = 8687, level = 28, tab = 4, rank = 2, cost = 8000, skill = 120 }, -- Instant Poison II 2
         { id = 2070, level = 28, tab = 3, rank = 2, cost = 8000, prev = 6770 }, -- Sap 2
+        { id = 1310709, level = 30, tab = 1 }, -- Coup de Grace
         { id = 8632, level = 30, tab = 1, rank = 3, cost = 10000, prev = 8631 }, -- Garrote 3
         { id = 408, level = 30, tab = 1, rank = 1, cost = 10000 }, -- Kidney Shot 1
         { id = 1760, level = 30, tab = 2, rank = 5, cost = 10000, prev = 1759 }, -- Sinister Strike 5

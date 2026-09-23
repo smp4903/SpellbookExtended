@@ -197,5 +197,4 @@ do -- Private Scope
     end
 
     Alert.Show = Show
-    Alert.Available = Available
 end

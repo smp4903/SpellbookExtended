@@ -10,16 +10,18 @@ A World of Warcraft: Forever addon that lists the class spells and ranks you can
 - Talking to your class trainer opens the panel beside the trainer window with a "Train all" button that buys everything you have not skipped, cheapest first.
 - Class-quest spells (Bear Form, Voidwalker...) and class-book ranks (AQ tomes, Dire Maul codices) are tagged instead of priced; quest spells say where the quest starts.
 - Higher ranks of talent spells (Insect Swarm, Mangle...) only show once you have the talent. Race- and faction-locked spells only show for the right character.
+- Weapon skills your class can still learn, with the weapon masters that teach them; click one to pin the master on your map.
 - Filter by spellbook tab, search by name, and optionally show known spells.
 - Shift-click a spell to link it in chat.
 
 ## Use
 
-Open the spellbook: a book button appears on its right edge and opens the panel beside it. `/sbe` opens it on its own.
+Open the spellbook: a book button appears on its right edge and opens the panel beside it. `/sbe` opens it on its own, and the settings live under Settings > AddOns > Spellbook Extended.
 
 | Command | |
 |---|---|
 | `/sbe` | Show or hide the panel |
+| `/sbe options` | Open the settings |
 | `/sbe dock` | Hover the spellbook and run this if the dock button does not appear |
 | `/sbe auto` | Open the panel together with the spellbook |
 | `/sbe notify` | Level-up announcement: alert, float, chat or off |
@@ -33,23 +35,21 @@ Open the spellbook: a book button appears on its right edge and opens the panel 
 
 1. **Forever client tables** (build 1.60.1.69876): SkillLineAbility, SpellLevels and Spell rows decoded from the client via wago.tools, as exported by [MAF2414/wow-forever-talents](https://github.com/MAF2414/wow-forever-talents). This decides which spells exist, their ranks, levels and spellbook tab, and which are talents.
 2. **Class books** from [alcaras/forever-ref](https://github.com/alcaras/forever-ref) item snapshots.
-3. **Classic trainer costs, prerequisites and race/faction locks** from [WhatsTraining](https://github.com/fusionpit/WhatsTraining) (MIT).
+3. **Classic trainer costs, prerequisites and race/faction locks**, plus the trainer skills that sit outside the class skill lines (Parry, Dual Wield, Mail, Plate Mail, shown on a General tab), from [WhatsTraining](https://github.com/fusionpit/WhatsTraining) (MIT).
 
 At runtime the addon prefers live values: the level comes from `C_Spell.GetSpellLevelLearned`, and visiting a class trainer replaces the Classic costs with the server's prices. Spells a trainer offers that the shipped data lacks are added to the list.
 
-Regenerate after a new beta build:
+Regenerate after a new beta build with `tools/fetch_sources.sh` (add `--report` to list what was left out). It clones the three sources into `tools/.sources/` and runs the generator.
 
-```
-python3 tools/build_data.py \
-  --forever path/to/wow-forever-talents/docs/index.html \
-  --items   path/to/forever-ref/builds/<build>.json.gz \
-  --wt      path/to/WhatsTraining/Classes/Vanilla \
-  --report
-```
+Hand-kept alongside the generated files: `Data/QuestHints.lua` (where class quests start), `Data/WeaponSkills.lua` (weapon masters, from WhatsTraining), and the quest-spell list at the top of `tools/build_data.py`.
+
+## Tests
+
+`tests/run.sh` loads the addon against a stubbed WoW API and checks the spell list, the trainer, the level-up announcement and the settings page. It needs `lua5.1`.
 
 ## Known limits
 
 - The beta client does not load SavedVariables, so options, skipped spells and trainer prices reset on each launch until Blizzard fixes that.
-- Costs are Classic prices until you visit a trainer. Spells new in Forever show "Trainer" with no price until then.
-- Quest-taught spells are a hand-kept list in `tools/build_data.py`.
+- Costs are Classic prices until you visit a trainer. Spells new in Forever show "Trainable" with no price until then.
+- Weapon skills and weapon masters follow Classic Era; Forever may have changed who teaches what.
 - The spellbook frame name is guessed from a list of candidates; `/sbe dock` covers the case where the guess is wrong.

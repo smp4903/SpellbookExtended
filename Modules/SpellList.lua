@@ -16,6 +16,7 @@ do -- Private Scope
     local STATE_SKIPPED = "skipped" -- the player chose not to buy it
 
     local classData = nil
+    local tabs = {}
     local entries = {}
     local byId = {}
     local nextRank = {}
@@ -36,6 +37,18 @@ do -- Private Scope
 
         for _, spell in ipairs(classData.spells) do
             AddEntry(spell)
+        end
+
+        -- Weapon skills get a tab of their own after the class tabs.
+        tabs = { unpack(classData.tabs) }
+        local weapons = SBE.WeaponSkills
+        local weaponTab = #tabs + 1
+        for _, id in ipairs(weapons and weapons.order or {}) do
+            local skill = weapons.skills[id]
+            if (skill.classes[class]) then
+                AddEntry({ id = id, level = skill.level or 1, tab = weaponTab, cost = skill.cost or 1000, weapon = true })
+                tabs[weaponTab] = "Weapons"
+            end
         end
 
         local discovered = SpellbookExtended_TrainerCache[class]
@@ -115,8 +128,10 @@ do -- Private Scope
         SBE.Fire("SBE_CHANGED")
     end
 
+    -- General spells (Parry, Mail...) sit outside the class skill lines, where
+    -- the client's own level is 1; their trainer level comes from the data.
     function Level(entry)
-        local live = SBE.GetSpellLevelLearned(entry.id)
+        local live = not entry.general and SBE.GetSpellLevelLearned(entry.id)
         if (live) then
             return live
         end
@@ -166,13 +181,15 @@ do -- Private Scope
     end
 
     -- Returns sections sorted by level, each { level, items, count, trainable,
-    -- cost, trainableCost }, plus a summary for the gold plan. The summary
-    -- ignores the search and tab filters: the budget is the same either way.
+    -- cost, trainableCost }, with weapon skills in a last section of their own,
+    -- plus a summary for the gold plan. The summary covers the class trainer
+    -- only and ignores the search and tab filters.
     function Build(filter)
         local options = SBE.options
         local playerLevel = UnitLevel("player")
         local sections, byLevel = {}, {}
-        local summary = { trainable = 0, cost = 0, total = 0, nextLevel = nil, nextCount = 0, nextCost = 0 }
+        local weaponSection = nil
+        local summary = { trainable = 0, cost = 0, nextLevel = nil, nextCount = 0, nextCost = 0 }
 
         for _, entry in ipairs(entries) do
             if (IsEligible(entry)) then
@@ -185,15 +202,11 @@ do -- Private Scope
                     and (state ~= STATE_OTHER or options.showQuestAndBook)
                     and (not options.trainableOnly or state == STATE_TRAINABLE)
 
-                if (state ~= STATE_KNOWN and state ~= STATE_SKIPPED) then
-                    summary.total = summary.total + 1
-                end
-
                 local cost = Cost(entry)
-                if (state == STATE_TRAINABLE) then
+                if (state == STATE_TRAINABLE and not entry.weapon) then
                     summary.trainable = summary.trainable + 1
                     summary.cost = summary.cost + (cost or 0)
-                elseif (state == STATE_FUTURE) then
+                elseif (state == STATE_FUTURE and not entry.weapon) then
                     if (not summary.nextLevel or level < summary.nextLevel) then
                         summary.nextLevel, summary.nextCount, summary.nextCost = level, 0, 0
                     end
@@ -204,11 +217,16 @@ do -- Private Scope
                 end
 
                 if (visible) then
-                    local section = byLevel[level]
+                    local section = entry.weapon and weaponSection or byLevel[level]
                     if (not section) then
                         section = { level = level, items = {}, count = 0, trainable = 0, cost = 0, trainableCost = 0 }
-                        byLevel[level] = section
-                        table.insert(sections, section)
+                        if (entry.weapon) then
+                            section.weapons = true
+                            weaponSection = section
+                        else
+                            byLevel[level] = section
+                            table.insert(sections, section)
+                        end
                     end
 
                     table.insert(section.items, {
@@ -231,6 +249,9 @@ do -- Private Scope
         end
 
         table.sort(sections, function(a, b) return a.level < b.level end)
+        if (weaponSection) then
+            table.insert(sections, weaponSection)
+        end
         for _, section in ipairs(sections) do
             table.sort(section.items, function(a, b)
                 if (a.entry.tab ~= b.entry.tab) then
@@ -251,7 +272,7 @@ do -- Private Scope
     function NewAtLevel(newLevel)
         local trainable, other = {}, {}
         for _, entry in ipairs(entries) do
-            if (IsEligible(entry) and Level(entry) == newLevel) then
+            if (not entry.weapon and IsEligible(entry) and Level(entry) == newLevel) then
                 local state = StateOf(entry, newLevel, newLevel)
                 if (state == STATE_TRAINABLE) then
                     table.insert(trainable, { entry = entry, cost = Cost(entry) })
@@ -303,7 +324,7 @@ do -- Private Scope
     end
 
     function Tabs()
-        return classData and classData.tabs or {}
+        return tabs
     end
 
     SBE.On("PLAYER_LOGIN", function()
@@ -339,6 +360,16 @@ do -- Private Scope
     SpellList.Discover = Discover
     SpellList.Changed = Changed
     SpellList.Tabs = Tabs
+    -- The first spell a tab unlocks stands in for its icon.
+    SpellList.TabIcon = function(tab)
+        local best = nil
+        for _, entry in ipairs(entries) do
+            if (entry.tab == tab and (not best or entry.level < best.level)) then
+                best = entry
+            end
+        end
+        return best and SBE.GetSpellIcon(best.id)
+    end
     SpellList.Get = function(id) return byId[id] end
     SpellList.Count = function() return #entries end
     SpellList.STATE_KNOWN = STATE_KNOWN

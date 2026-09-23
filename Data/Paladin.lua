@@ -3,7 +3,7 @@
 local _, SBE = ...
 
 SBE.Data.PALADIN = {
-    tabs = { "Holy", "Protection", "Retribution" },
+    tabs = { "Holy", "Protection", "Retribution", "General" },
     spells = {
         { id = 465, level = 1, tab = 2, rank = 1, cost = 10 }, -- Devotion Aura 1
         { id = 19740, level = 4, tab = 3, rank = 1, cost = 100 }, -- Blessing of Might 1
@@ -12,6 +12,7 @@ SBE.Data.PALADIN = {
         { id = 498, level = 6, tab = 2, rank = 1, cost = 100 }, -- Divine Protection 1
         { id = 679, level = 6, tab = 3, rank = 1 }, -- Holy Strike 1
         { id = 21082, level = 6, tab = 3, rank = 1, cost = 100 }, -- Seal of the Crusader 1
+        { id = 3127, level = 8, tab = 4, cost = 100, general = true }, -- Parry
         { id = 1152, level = 8, tab = 1, cost = 100 }, -- Purify
         { id = 853, level = 8, tab = 2, rank = 1, cost = 100 }, -- Hammer of Justice 1
         { id = 633, level = 10, tab = 1, rank = 1, cost = 300 }, -- Lay on Hands 1
@@ -82,6 +83,7 @@ SBE.Data.PALADIN = {
         { id = 20166, level = 38, tab = 1, rank = 1, cost = 16000 }, -- Seal of Wisdom 1
         { id = 5627, level = 38, tab = 1, rank = 2, cost = 16000, prev = 2878 }, -- Turn Undead 2
         { id = 10278, level = 38, tab = 2, rank = 3, cost = 16000, prev = 5599 }, -- Blessing of Protection 3
+        { id = 750, level = 40, tab = 4, cost = 20000, general = true }, -- Plate Mail
         { id = 19977, level = 40, tab = 1, rank = 1, cost = 20000 }, -- Blessing of Light 1
         { id = 20922, level = 40, tab = 1, rank = 3, prev = 20116 }, -- Consecration 3
         { id = 20473, level = 40, tab = 1, rank = 2, prev = 1311606, requires = 1311606 }, -- Holy Shock 2

@@ -184,7 +184,6 @@ do -- Private Scope
 
     Dock.Attach = Attach
     Dock.Anchor = Anchor
-    Dock.Target = function() return target end
     Dock.SetFrameByName = function(name)
         local frame = _G[name]
         if (type(frame) ~= "table" or not frame.HookScript) then
