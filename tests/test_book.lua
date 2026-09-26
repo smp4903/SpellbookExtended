@@ -116,6 +116,7 @@ check(not headerNamed("Marksmanship").data.collapsed, "clicking again unfolds it
 book.footer._scripts.OnClick()
 local panel = ns.Panel.Frame()
 check(panel:IsShown() and panel.dockedTo == book, "footer opens the panel docked to the book")
+check(panel._points.TOPLEFT == book and panel._points.BOTTOMLEFT == book, "docked panel spans the book's height")
 check(book.footer.lit:IsShown(), "footer lit while the panel is open")
 book.footer._scripts.OnClick()
 check(not panel:IsShown() and not book.footer.lit:IsShown(), "footer closes it again")
@@ -125,6 +126,8 @@ RunTimers()
 check(panel:IsShown(), "an upcoming row opens the panel at its level")
 book:Hide()
 check(not panel:IsShown(), "closing the book closes the docked panel")
+ns.Dock.Anchor()
+check(panel.dockedTo == nil and panel._h == ns.Panel.HEIGHT and panel._points.BOTTOMLEFT == nil, "undocked panel goes back to its own height")
 
 -- The spellbook key.
 check(ns.options.compactBook == true, "compact spellbook on by default")

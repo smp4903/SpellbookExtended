@@ -838,6 +838,7 @@ do -- Private Scope
     Panel.Show = ShowPanel
     Panel.Toggle = Toggle
     Panel.Frame = function() return panel end
+    Panel.HEIGHT = PANEL_HEIGHT
     Panel.ItemTooltip = ItemTooltip
     Panel.ApplyParchment = ApplyParchment
     Panel.JumpTo = JumpTo

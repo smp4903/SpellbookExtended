@@ -20,7 +20,7 @@ do -- Private Scope
     local hooked = {}
 
     -- Forward declarations: keep these as file-locals so they never leak into _G.
-    local Resolve, Attach, CreateButton, Anchor, OnTargetShow, OnTargetHide, SetTarget
+    local Resolve, Attach, CreateButton, Anchor, OnTargetShow, OnTargetHide, SetTarget, DockBeside, Undock
 
     function Resolve()
         local override = SBE.options and SBE.options.dockFrame
@@ -66,24 +66,32 @@ do -- Private Scope
         button:Hide()
     end
 
+    -- Pinned to the frame's top and bottom, so both are always the same height.
+    function DockBeside(panel, frame, gap)
+        panel:ClearAllPoints()
+        panel:SetPoint("TOPLEFT", frame, "TOPRIGHT", gap, 0)
+        panel:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", gap, 0)
+        panel:SetFrameStrata(frame:GetFrameStrata())
+        panel.dockedTo = frame
+    end
+
+    function Undock(panel)
+        panel:ClearAllPoints()
+        panel:SetHeight(SBE.Panel.HEIGHT)
+        panel:SetPoint("CENTER")
+        panel.dockedTo = nil
+    end
+
     -- Beside a spellbook when one is open, otherwise wherever the player left it.
     function Anchor()
         local panel = SBE.Panel.Create()
         local book = SBE.Book.Frame()
         if (book and book:IsShown()) then
-            panel:ClearAllPoints()
-            panel:SetPoint("TOPLEFT", book, "TOPRIGHT", 4, 0)
-            panel:SetFrameStrata(book:GetFrameStrata())
-            panel.dockedTo = book
+            DockBeside(panel, book, 4)
         elseif (target and target:IsShown()) then
-            panel:ClearAllPoints()
-            panel:SetPoint("TOPLEFT", target, "TOPRIGHT", 46, 0) -- clear of the button
-            panel:SetFrameStrata(target:GetFrameStrata())
-            panel.dockedTo = target
+            DockBeside(panel, target, 46) -- clear of the button
         elseif (panel.dockedTo) then
-            panel:ClearAllPoints()
-            panel:SetPoint("CENTER")
-            panel.dockedTo = nil
+            Undock(panel)
         end
     end
 
@@ -168,8 +176,10 @@ do -- Private Scope
         -- Blizzard creates the trainer window in response to the same event.
         C_Timer.After(0, function()
             local trainer = _G.ClassTrainerFrame
+            -- Top-aligned at its own height: the trainer window is too short to match.
             if (trainer and trainer:IsShown()) then
                 panel:ClearAllPoints()
+                panel:SetHeight(SBE.Panel.HEIGHT)
                 panel:SetPoint("TOPLEFT", trainer, "TOPRIGHT", 4, 0)
                 panel:SetFrameStrata(trainer:GetFrameStrata())
             end
@@ -183,9 +193,7 @@ do -- Private Scope
         if (panel and panel.openedByTrainer) then
             panel.openedByTrainer = nil
             panel:Hide()
-            panel.dockedTo = nil
-            panel:ClearAllPoints()
-            panel:SetPoint("CENTER")
+            Undock(panel)
         end
     end)
 

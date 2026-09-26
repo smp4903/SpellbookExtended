@@ -26,9 +26,15 @@ local function newObject(kind, name)
   o.Hide = function(self) local was = self._shown; self._shown = false; if was and self._scripts.OnHide then self._scripts.OnHide(self) end end
   o.IsShown = function(self) return self._shown end
   o.SetShown = function(self, v) if v then self:Show() else self:Hide() end end
-  o.SetPoint = function(self, point, rel) self._anchors = self._anchors or {}; table.insert(self._anchors, type(rel) == "table" and rel or self._parent or UIParent) end
+  o.SetPoint = function(self, point, rel)
+    self._anchors = self._anchors or {}; self._points = self._points or {}
+    local target = type(rel) == "table" and rel or self._parent or UIParent
+    table.insert(self._anchors, target)
+    self._points[point] = target
+  end
   o.SetAllPoints = function(self, rel) self._anchors = self._anchors or {}; table.insert(self._anchors, rel or self._parent) end
-  o.ClearAllPoints = function(self) self._anchors = {} end
+  o.ClearAllPoints = function(self) self._anchors = {}; self._points = {} end
+  o.SetHeight = function(self, h) self._h = h end
   o.GetCenter = function() return 150, 600 end
   o.GetEffectiveScale = function() return 1 end
   o.GetWidth = function(self) return self._w end
