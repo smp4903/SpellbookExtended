@@ -30,6 +30,9 @@ Modules\Weapons.lua
 Modules\Toast.lua
 Modules\Alert.lua
 Modules\Notify.lua
+Modules\BookData.lua
+Modules\Book.lua
+Modules\BookKeys.lua
 Modules\Options.lua
 Modules\SlashCommands.lua
 

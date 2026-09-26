@@ -2,6 +2,7 @@
 -- Only what the addon touches; unknown frame methods are no-ops.
 local root = arg[1] or ".."
 local frames = {}
+FRAMES = frames
 local universal
 universal = setmetatable({}, { __call = function() return nil end, __index = function() return universal end })
 local function newObject(kind, name)
@@ -24,6 +25,12 @@ local function newObject(kind, name)
   o.Show = function(self) local was = self._shown; self._shown = true; if not was and self._scripts.OnShow then self._scripts.OnShow(self) end end
   o.Hide = function(self) local was = self._shown; self._shown = false; if was and self._scripts.OnHide then self._scripts.OnHide(self) end end
   o.IsShown = function(self) return self._shown end
+  o.SetShown = function(self, v) if v then self:Show() else self:Hide() end end
+  o.SetPoint = function(self, point, rel) self._anchors = self._anchors or {}; table.insert(self._anchors, type(rel) == "table" and rel or self._parent or UIParent) end
+  o.SetAllPoints = function(self, rel) self._anchors = self._anchors or {}; table.insert(self._anchors, rel or self._parent) end
+  o.ClearAllPoints = function(self) self._anchors = {} end
+  o.GetCenter = function() return 150, 600 end
+  o.GetEffectiveScale = function() return 1 end
   o.GetWidth = function(self) return self._w end
   o.SetWidth = function(self, w) self._w = w end
   o.GetHeight = function() return 30 end
@@ -33,8 +40,11 @@ local function newObject(kind, name)
   o.GetFontString = function(self) local fs = rawget(self, "_fs") or newObject("FontString"); rawset(self, "_fs", fs); return fs end
   o.CreateTexture = function() return newObject("Texture") end
   o.CreateFontString = function() return newObject("FontString") end
+  o.CreateAnimationGroup = function() return newObject("AnimationGroup") end
+  o.CreateAnimation = function() return newObject("Animation") end
   o.GetChecked = function(self) return rawget(self, "_checked") end
   o.SetChecked = function(self, v) self._checked = v end
+  o.SetEnabled = function(self, v) self._enabled = v and true or false end
   o.GetName = function() return name end
   o.GetFrameStrata = function() return "MEDIUM" end
   o.GetParent = function() return nil end
@@ -42,6 +52,8 @@ local function newObject(kind, name)
 end
 function CreateFrame(kind, name, parent, template)
   local f = newObject(kind, name)
+  f._parent = parent
+  f._template = template
   f._shown = true
   table.insert(frames, f)
   if name then _G[name] = f end
@@ -104,6 +116,17 @@ C_Spell = {
   GetSpellLink = function(id) return "|Hspell:"..id.."|h" end,
 }
 C_SpellBook = {}
+Enum = { SpellBookItemType = { None = 0, Spell = 1, FutureSpell = 2, PetAction = 3, Flyout = 4 }, SpellBookSpellBank = { Player = 0, Pet = 1 } }
+CVARS = {}
+function GetCVarBool(name) return CVARS[name] == "1" end
+function SetCVar(name, value) CVARS[name] = tostring(value) end
+IN_COMBAT = false
+function InCombatLockdown() return IN_COMBAT end
+BINDINGS = { TOGGLESPELLBOOK = { "P" } }
+OVERRIDES = {}
+function GetBindingKey(command) return unpack(BINDINGS[command] or {}) end
+function SetOverrideBindingClick(owner, priority, key, button, mouse) OVERRIDES[key] = "CLICK "..button..":"..(mouse or "LeftButton") end
+function ClearOverrideBindings() wipe(OVERRIDES) end
 C_Timer = { After = function(t, f) PENDING = PENDING or {}; table.insert(PENDING, f) end }
 C_Texture = { GetAtlasInfo = function() return nil end }
 C_CurrencyInfo = {}

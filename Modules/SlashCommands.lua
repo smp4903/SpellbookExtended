@@ -40,6 +40,7 @@ do -- Private Scope
         SBE.Fire("SBE_CHANGED")
     end
 
+    AddCommand("book", "show or hide the compact spellbook", function() SBE.Book.Toggle() end)
     AddCommand("options", "open the settings", function() SBE.Options.Open() end)
     AddCommand("settings", nil, function() SBE.Options.Open() end)
 

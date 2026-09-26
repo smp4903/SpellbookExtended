@@ -9,7 +9,7 @@ do -- Private Scope
     local debug = false
 
     -- Forward declarations: keep these as file-locals so they never leak into _G.
-    local Inspect, OnTrainerService
+    local Inspect, OnTrainerService, Check
 
     SBE.DebugPrint = function(msg)
         if (debug) then
@@ -52,9 +52,35 @@ do -- Private Scope
 
     SBE.OnTrainerService = OnTrainerService
 
+    -- What the compact spellbook relies on, as this client has it.
+    function Check()
+        local function line(label, ok, detail)
+            print(string.format("  %s %s%s", ok and "|cff40ff40yes|r" or "|cffff4040no|r", label, detail and ("  "..detail) or ""))
+        end
+        SBE.Print("compact spellbook check")
+        local keys = { GetBindingKey("TOGGLESPELLBOOK") }
+        line("Toggle Spellbook key", #keys > 0, table.concat(keys, ", "))
+        local action = keys[1] and GetBindingAction(keys[1], true)
+        line("key opens the compact book", action == "CLICK SpellbookExtendedBookToggle:LeftButton", tostring(action))
+        line("micro button", (_G.SpellbookMicroButton or _G.PlayerSpellsMicroButton) ~= nil)
+        line("GameTooltip:SetSpellBookItem", GameTooltip.SetSpellBookItem ~= nil)
+        line("C_SpellBook.PickupSpellBookItem", C_SpellBook.PickupSpellBookItem ~= nil)
+        line("C_SpellBook.IsSpellBookItemLowRank", C_SpellBook.IsSpellBookItemLowRank ~= nil)
+        line("C_SpellBook.GetSpellBookItemCooldown", C_SpellBook.GetSpellBookItemCooldown ~= nil)
+        line("MenuUtil.CreateContextMenu", MenuUtil and MenuUtil.CreateContextMenu ~= nil)
+        line("in combat", InCombatLockdown())
+        local rows = SBE.BookData.Build({ showUpcoming = true })
+        local counts = { header = 0, spell = 0, upcoming = 0 }
+        for _, row in ipairs(rows) do
+            counts[row.kind] = (counts[row.kind] or 0) + 1
+        end
+        line("book rows", #rows > 0, string.format("%d sections, %d spells, %d upcoming", counts.header, counts.spell, counts.upcoming))
+    end
+
     SBE.AddCommand("debug", "toggle debug output", function()
         debug = not debug
         SBE.Print("debug "..(debug and "on" or "off"))
     end)
     SBE.AddCommand("inspect", "list the textures of the frame under the mouse", Inspect)
+    SBE.AddCommand("check", "check what the compact spellbook needs from this client", Check)
 end

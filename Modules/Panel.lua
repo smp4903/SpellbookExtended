@@ -44,12 +44,15 @@ do -- Private Scope
     local filter = { search = "", tab = 0 }
     local tilePool, headerPool = {}, {}
     local usedTiles, usedHeaders = 0, 0
+    local levelOffsets, tilesById = {}, {}
+    local flashId = nil
 
     -- Forward declarations: keep these as file-locals so they never leak into _G.
     local Create, CreateChrome, CreateToolbar, CreateFooter, CreateCheckbox, CreateParchment
     local AcquireTile, AcquireHeader, ReleaseAll, Refresh, DrawTile, DrawHeader
     local ShowTooltip, OnTileClick, Colour, SubText, HeaderSummary, Toggle, ShowPanel
     local CreatePlanBar, DrawPlan, ClearSearch, TabIcon, CreateTabFrame
+    local ItemTooltip, ApplyParchment, JumpTo, ScrollToTarget, StopFlash
 
     function Colour(fontString, c)
         fontString:SetTextColor(c[1], c[2], c[3])
@@ -98,7 +101,7 @@ do -- Private Scope
     end
 
     function CreateChrome()
-        local title = "Trainable Spells"
+        local title = "Spells to Learn"
         if (panel.SetTitle) then
             panel:SetTitle(title)
         elseif (panel.TitleText) then
@@ -230,19 +233,7 @@ do -- Private Scope
 
         local bg = page:CreateTexture(nil, "BACKGROUND")
         bg:SetAllPoints()
-        local atlas = nil
-        for _, name in ipairs(PARCHMENT_ATLASES) do
-            if (C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(name)) then
-                atlas = name
-                break
-            end
-        end
-        if (atlas) then
-            bg:SetAtlas(atlas)
-        else
-            bg:SetColorTexture(1, 1, 1, 1)
-            bg:SetGradient("VERTICAL", CreateColor(0.80, 0.70, 0.52, 1), CreateColor(0.93, 0.85, 0.68, 1))
-        end
+        ApplyParchment(bg)
 
         local scroll = CreateFrame("ScrollFrame", "SpellbookExtendedScrollFrame", page, "UIPanelScrollFrameTemplate")
         scroll:SetPoint("TOPLEFT", page, "TOPLEFT", INSET, -(INSET + PLAN_HEIGHT))
@@ -265,6 +256,17 @@ do -- Private Scope
         Colour(empty, INK_SOFT)
         empty:SetShadowOffset(0, 0)
         panel.empty = empty
+    end
+
+    function ApplyParchment(texture)
+        for _, name in ipairs(PARCHMENT_ATLASES) do
+            if (C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(name)) then
+                texture:SetAtlas(name)
+                return
+            end
+        end
+        texture:SetColorTexture(1, 1, 1, 1)
+        texture:SetGradient("VERTICAL", CreateColor(0.80, 0.70, 0.52, 1), CreateColor(0.93, 0.85, 0.68, 1))
     end
 
     function CreateCheckbox(label, key, tooltip)
@@ -426,6 +428,20 @@ do -- Private Scope
         tile.highlight:SetAllPoints()
         tile.highlight:SetColorTexture(1, 0.9, 0.6, 0.25)
 
+        -- Marks the spell a click in the compact book jumped to.
+        tile.flash = tile:CreateTexture(nil, "OVERLAY")
+        tile.flash:SetAllPoints()
+        tile.flash:SetColorTexture(1, 0.82, 0.2, 0.45)
+        tile.flash:SetBlendMode("ADD")
+        tile.flash:Hide()
+        local pulse = tile.flash:CreateAnimationGroup()
+        pulse:SetLooping("BOUNCE")
+        local fade = pulse:CreateAnimation("Alpha")
+        fade:SetFromAlpha(1)
+        fade:SetToAlpha(0.2)
+        fade:SetDuration(0.4)
+        tile.pulse = pulse
+
         tile:SetScript("OnEnter", ShowTooltip)
         tile:SetScript("OnLeave", GameTooltip_Hide)
         tile:SetScript("OnClick", OnTileClick)
@@ -571,6 +587,15 @@ do -- Private Scope
         tile.icon:SetDesaturated(dim)
         tile.icon:SetAlpha(dim and 0.6 or 1)
         Colour(tile.name, dim and INK_FADED or INK)
+
+        tilesById[entry.id] = tile
+        local flashing = flashId == entry.id
+        tile.flash:SetShown(flashing)
+        if (flashing) then
+            tile.pulse:Play()
+        else
+            tile.pulse:Stop()
+        end
     end
 
     function Refresh()
@@ -592,6 +617,8 @@ do -- Private Scope
         end
 
         ReleaseAll()
+        wipe(levelOffsets)
+        wipe(tilesById)
 
         local sections, summary = SpellList.Build(filter)
         local playerLevel = UnitLevel("player")
@@ -602,6 +629,9 @@ do -- Private Scope
 
         for _, section in ipairs(sections) do
             local header = AcquireHeader()
+            if (not section.weapons) then
+                levelOffsets[section.level] = y
+            end
             header:SetPoint("TOPLEFT", panel.content, "TOPLEFT", 0, -y)
             header:SetPoint("RIGHT", panel.content, "RIGHT", 0, 0)
             DrawHeader(header, section, playerLevel)
@@ -634,13 +664,16 @@ do -- Private Scope
     end
 
     function ShowTooltip(tile)
-        local item = tile.item
-        if (not item) then
-            return
+        if (tile.item) then
+            ItemTooltip(tile, tile.item)
         end
+    end
+
+    -- Shared with the compact book's rows for spells still to learn.
+    function ItemTooltip(owner, item, hint)
         local entry = item.entry
 
-        GameTooltip:SetOwner(tile, "ANCHOR_RIGHT")
+        GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
         GameTooltip:SetSpellByID(entry.id)
         GameTooltip:AddLine(" ")
 
@@ -706,7 +739,55 @@ do -- Private Scope
         elseif (item.state ~= SpellList.STATE_KNOWN and not entry.quest and not entry.book) then
             GameTooltip:AddLine("Right-click to skip this rank and the ones above it.", 0.6, 0.6, 0.6, true)
         end
+        if (hint) then
+            GameTooltip:AddLine(hint, 0.6, 0.6, 0.6, true)
+        end
         GameTooltip:Show()
+    end
+
+    -- Opens the panel at the level a spell unlocks and flashes its tile.
+    function JumpTo(id)
+        Create()
+        local entry = SpellList.Get(id)
+        if (entry and filter.tab ~= 0 and filter.tab ~= entry.tab) then
+            filter.tab = 0
+            SBE.options.tab = 0
+        end
+        if (filter.search ~= "") then
+            ClearSearch()
+        end
+
+        StopFlash()
+        flashId = id
+        C_Timer.After(2.5, StopFlash)
+
+        if (panel:IsShown()) then
+            Refresh()
+        else
+            panel:Show()
+        end
+        -- The scroll range updates a frame after the content grows.
+        C_Timer.After(0, function() ScrollToTarget(id) end)
+    end
+
+    function ScrollToTarget(id)
+        local tile = tilesById[id]
+        local item = tile and tile.item
+        local offset = item and levelOffsets[item.level]
+        if (not offset) then
+            return
+        end
+        local range = panel.scroll:GetVerticalScrollRange() or 0
+        panel.scroll:SetVerticalScroll(math.max(0, math.min(offset, range)))
+    end
+
+    function StopFlash()
+        local tile = flashId and tilesById[flashId]
+        if (tile and tile.item and tile.item.entry.id == flashId) then
+            tile.pulse:Stop()
+            tile.flash:Hide()
+        end
+        flashId = nil
     end
 
     function OnTileClick(tile, button)
@@ -757,4 +838,7 @@ do -- Private Scope
     Panel.Show = ShowPanel
     Panel.Toggle = Toggle
     Panel.Frame = function() return panel end
+    Panel.ItemTooltip = ItemTooltip
+    Panel.ApplyParchment = ApplyParchment
+    Panel.JumpTo = JumpTo
 end

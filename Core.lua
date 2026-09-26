@@ -15,6 +15,9 @@ do -- Private Scope
         ["autoOpen"] = false,
         ["openWithTrainer"] = true,
         ["tab"] = 0,
+        ["compactBook"] = true,
+        ["bookUpcoming"] = true,
+        ["bookUnfoldAll"] = false,
     }
 
     local frame = CreateFrame("Frame")

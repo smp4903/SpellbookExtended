@@ -197,10 +197,16 @@ do -- Private Scope
                 local state = StateOf(entry, level, playerLevel)
                 local name = SBE.GetSpellName(entry.id)
 
-                local visible = Matches(entry, name, filter)
-                    and (state ~= STATE_KNOWN or options.showKnown)
-                    and (state ~= STATE_OTHER or options.showQuestAndBook)
-                    and (not options.trainableOnly or state == STATE_TRAINABLE)
+                local visible
+                if (filter.upcoming) then
+                    -- The compact book: everything still to learn, whatever the panel shows.
+                    visible = not entry.weapon and state ~= STATE_KNOWN and state ~= STATE_SKIPPED
+                else
+                    visible = Matches(entry, name, filter)
+                        and (state ~= STATE_KNOWN or options.showKnown)
+                        and (state ~= STATE_OTHER or options.showQuestAndBook)
+                        and (not options.trainableOnly or state == STATE_TRAINABLE)
+                end
 
                 local cost = Cost(entry)
                 if (state == STATE_TRAINABLE and not entry.weapon) then

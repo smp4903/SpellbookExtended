@@ -1,6 +1,18 @@
 # Spellbook Extended
 
-A World of Warcraft: Forever addon that lists the class spells and ranks you can still learn, in a spellbook-style panel with one header per unlock level.
+A World of Warcraft: Forever addon that lists the class spells and ranks you can still learn, in a spellbook-style panel with one header per unlock level, and a compact spellbook you can browse on the run.
+
+## Compact spellbook
+
+The key bound to Toggle Spellbook opens a narrow (280px) spellbook at the left edge of the screen instead of Blizzard's full-screen one, so you can still see where you are going. It is on by default; turn off "Use the compact spellbook" in the settings to get Blizzard's spellbook back on the key.
+
+- One scrolling list with a header per spellbook section (General, the class specs, Pet). Click a header to fold its section; the search box filters everything and opens folded sections while you search.
+- 24px rows: icon, name and rank. Spells with lower ranks get a plus button; click the row to unfold the lower ranks and drag one to a bar. Flyouts such as Paladin blessings are not grouped: each spell has its own row.
+- Spells you can still learn close each section, greyed, with the level in red or the cost if you can train them now. Click one to open the Spells to learn panel at its level; right-click to skip it. The filter menu hides them.
+- Drag any spell to your action bars, shift-click to link, and see cooldowns on the icons. Casting by clicking is left to Blizzard's book, so the compact book opens freely in combat.
+- "Spells to learn" in its footer opens the panel docked beside it, with what you can train now and its cost.
+- The book icon in its toolbar opens Blizzard's spellbook (not in combat). The Spellbook micro button still opens Blizzard's book too.
+- Blizzard's spellbook is never modified, so casting from it keeps working.
 
 - Every spell you have not learned yet, levels 1 to 60. Spells above your level are greyed out with the level in red; missed lower ranks stay listed until you learn something higher.
 - Trainer cost on each spell (can be hidden), a summary on each level header, and what you can train now with its total at the bottom.
@@ -16,11 +28,12 @@ A World of Warcraft: Forever addon that lists the class spells and ranks you can
 
 ## Use
 
-Open the spellbook: a book button appears on its right edge and opens the panel beside it. `/sbe` opens it on its own, and the settings live under Settings > AddOns > Spellbook Extended.
+Press your spellbook key for the compact spellbook, and click "Spells to learn" in its footer for the panel. Blizzard's spellbook gets a book button on its right edge that opens the panel beside it. `/sbe` opens the panel on its own, and the settings live under Settings > AddOns > Spellbook Extended.
 
 | Command | |
 |---|---|
 | `/sbe` | Show or hide the panel |
+| `/sbe book` | Show or hide the compact spellbook, even while it is turned off in the settings |
 | `/sbe options` | Open the settings |
 | `/sbe dock` | Hover the spellbook and run this if the dock button does not appear |
 | `/sbe auto` | Open the panel together with the spellbook |
@@ -44,7 +57,7 @@ Hand-kept alongside the generated files: `Data/QuestHints.lua` (where class ques
 
 ## Development
 
-`Dev/DevTools.lua` adds `/sbe debug` (debug output, including every trainer service as the client reports it) and `/sbe inspect` (textures and anchors of the frame under the mouse), and exposes the addon table as the global `SpellbookExtended` for `/dump`. The TOC lists it between `#@debug@` markers, so releases leave it out. Mark any other development-only code with `--@debug@` / `--@end-debug@` in Lua or `#@debug@` / `#@end-debug@` in the TOC; these are also the markers CurseForge's packager understands.
+`Dev/DevTools.lua` adds `/sbe debug` (debug output, including every trainer service as the client reports it), `/sbe inspect` (textures and anchors of the frame under the mouse) and `/sbe check` (what the compact spellbook needs from the client: the spellbook key, the micro button, tooltip and pickup APIs, the rows it builds), and exposes the addon table as the global `SpellbookExtended` for `/dump`. The TOC lists it between `#@debug@` markers, so releases leave it out. Mark any other development-only code with `--@debug@` / `--@end-debug@` in Lua or `#@debug@` / `#@end-debug@` in the TOC; these are also the markers CurseForge's packager understands.
 
 `tests/run.sh` loads the addon against a stubbed WoW API and checks the spell list, the trainer, the level-up announcement, the settings page and that dev tools stay out of releases. It needs `lua5.1`. Pass a folder to test a release build instead: `tests/run.sh dist/SpellbookExtended-v0-1-0/SpellbookExtended`.
 
@@ -58,3 +71,4 @@ Hand-kept alongside the generated files: `Data/QuestHints.lua` (where class ques
 - Costs are Classic prices until you visit a trainer. Spells new in Forever show "Trainable" with no price until then.
 - Weapon skills and weapon masters follow Classic Era; Forever may have changed who teaches what.
 - The spellbook frame name is guessed from a list of candidates; `/sbe dock` covers the case where the guess is wrong.
+- The compact spellbook's position resets on each launch for the same SavedVariables reason.

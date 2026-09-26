@@ -22,13 +22,19 @@ do -- Private Scope
     -- Forward declarations: keep these as file-locals so they never leak into _G.
     local Create, AddCheckbox, Sync, SkippedCount, Open
 
-    function AddCheckbox(stack, key, label, tooltip)
+    -- dependsOn: greyed out while that option is off.
+    function AddCheckbox(stack, key, label, tooltip, dependsOn)
         local cb = UI:MakeCheckbox(frame, label, tooltip)
         cb:SetScript("OnClick", function(self)
             SBE.options[key] = self:GetChecked() and true or false
+            if (key == "compactBook") then
+                SBE.BookKeys.Apply()
+                Sync()
+            end
             SBE.Fire("SBE_CHANGED")
         end)
         cb.key = key
+        cb.dependsOn = dependsOn
         table.insert(checkboxes, cb)
         stack:Add(cb, { gap = 2 })
     end
@@ -52,12 +58,17 @@ do -- Private Scope
         note:SetWidth(560)
         stack:Add(note, { gap = 18 })
 
-        stack:Add(UI:MakeText(frame, "Trainable Spells panel"), { gap = 6 })
+        stack:Add(UI:MakeText(frame, "Compact spellbook"), { gap = 6 })
+        AddCheckbox(stack, "compactBook", "Use the compact spellbook", "Your spellbook key opens a narrow, dense spellbook at the edge of the screen instead of Blizzard's. Blizzard's spellbook stays on the micro button.")
+        AddCheckbox(stack, "bookUpcoming", "Show upcoming spells", "List the spells you can still learn at the end of each section.", "compactBook")
+        stack:Space(16)
+
+        stack:Add(UI:MakeText(frame, "Spells to learn panel"), { gap = 6 })
         AddCheckbox(stack, "showKnown", "Show known spells", "Also list spells and ranks you have already learned.")
         AddCheckbox(stack, "trainableOnly", "Only spells trainable now", "Hide spells above your level and spells that need an earlier rank first.")
         AddCheckbox(stack, "showQuestAndBook", "Show quest and book spells", "Include spells taught by class quests or class books.")
         AddCheckbox(stack, "showCosts", "Show costs", "Show trainer prices on spells, level headers and the gold plan.")
-        AddCheckbox(stack, "autoOpen", "Open with the spellbook", "Show the panel beside the spellbook whenever you open it.")
+        AddCheckbox(stack, "autoOpen", "Open with the spellbook", "Show the panel beside the spellbook (compact or Blizzard's) whenever you open it.")
         AddCheckbox(stack, "openWithTrainer", "Open when talking to a trainer", "Show the panel, with its Train all button, beside the trainer window.")
         stack:Space(16)
 
@@ -93,6 +104,11 @@ do -- Private Scope
     function Sync()
         for _, cb in ipairs(checkboxes) do
             cb:SetChecked(SBE.options[cb.key])
+            if (cb.dependsOn) then
+                local enabled = SBE.options[cb.dependsOn] and true or false
+                cb:SetEnabled(enabled)
+                cb.label:SetAlpha(enabled and 1 or 0.5)
+            end
         end
         frame.dropdown:Sync()
         local count = SkippedCount()

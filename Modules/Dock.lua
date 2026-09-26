@@ -1,6 +1,7 @@
--- Dock: a toggle button on the edge of Blizzard's spellbook. The panel opens
--- beside the spellbook and closes with it. Nothing is parented to or inserted
--- into Blizzard's frame, so its secure code never runs addon code.
+-- Dock: the panel opens beside whichever spellbook is open (the compact book
+-- first, else Blizzard's, which gets a toggle button on its edge) and closes
+-- with it. Nothing is parented to or inserted into Blizzard's frame, so its
+-- secure code never runs addon code.
 
 local _, SBE = ...
 
@@ -57,18 +58,24 @@ do -- Private Scope
         end)
         button:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText("Trainable Spells")
-            GameTooltip:AddLine("Spells and ranks you can still learn.", 1, 1, 1, true)
+            GameTooltip:SetText("Spells to learn")
+            GameTooltip:AddLine("Show the spells and ranks you can still learn, by level.", 1, 1, 1, true)
             GameTooltip:Show()
         end)
         button:SetScript("OnLeave", GameTooltip_Hide)
         button:Hide()
     end
 
-    -- Beside the spellbook when it is open, otherwise wherever the player left it.
+    -- Beside a spellbook when one is open, otherwise wherever the player left it.
     function Anchor()
         local panel = SBE.Panel.Create()
-        if (target and target:IsShown()) then
+        local book = SBE.Book.Frame()
+        if (book and book:IsShown()) then
+            panel:ClearAllPoints()
+            panel:SetPoint("TOPLEFT", book, "TOPRIGHT", 4, 0)
+            panel:SetFrameStrata(book:GetFrameStrata())
+            panel.dockedTo = book
+        elseif (target and target:IsShown()) then
             panel:ClearAllPoints()
             panel:SetPoint("TOPLEFT", target, "TOPRIGHT", 46, 0) -- clear of the button
             panel:SetFrameStrata(target:GetFrameStrata())
