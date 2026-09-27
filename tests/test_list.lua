@@ -32,6 +32,15 @@ check(panel:IsShown(), "panel draws with the weapon section")
 check(#panel.tabButtons == #ns.SpellList.Tabs() + 1, "one icon tab per spellbook tab plus All")
 check(panel.tabLabel:GetText() == "All spells", "active tab named beside the icons")
 check(#panel.checkboxes == 5 and panel.checkboxes[5].key == "autoOpen", "Open with spellbook in the footer")
+-- Seal of Righteousness 1 exists as 20154 and 21084; paladins start with 21084.
+Login("PALADIN", 10, { 21084, 635 })
+local paladin = ListState()
+check(paladin[20287] and paladin[20287].state == "trainable", "Seal of Righteousness 2 trainable with the starting rank 1")
+Login("PALADIN", 10, { 20154, 635 })
+check(ListState()[20287].state == "trainable", "and with the other rank 1 ID")
+Login("PALADIN", 10, { 635 })
+check(ListState()[20287].state == "blocked", "blocked without rank 1")
+
 -- A hunter learns Parry from the class trainer at 8, outside the class skill lines.
 Login("HUNTER", 8, { 1978 })
 local hunter = ListState()

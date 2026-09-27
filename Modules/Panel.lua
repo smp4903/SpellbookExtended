@@ -711,7 +711,7 @@ do -- Private Scope
             GameTooltip:AddLine("Trainer cost: "..SBE.FormatMoney(item.cost), 1, 1, 1)
         end
 
-        if (entry.prev and not SBE.IsKnown(entry.prev)) then
+        if (not SpellList.PrevKnown(entry)) then
             GameTooltip:AddLine("Requires "..(SBE.GetSpellName(entry.prev) or "the previous rank")..
                 (SBE.GetSpellSubtext(entry.prev) and (" ("..SBE.GetSpellSubtext(entry.prev)..")") or ""), 1, 0.1, 0.1)
         end

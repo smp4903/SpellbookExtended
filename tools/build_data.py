@@ -195,6 +195,12 @@ def build_class(cls, wt, books, spells):
         by_rank = {}
         for m in sorted(keep, key=lambda m: (m["id"] not in wt, not m["classic"], m["id"])):
             by_rank.setdefault(m["rank"], m)
+        # A rank can exist under two IDs (Seal of Righteousness 1: 20154 and the
+        # 21084 paladins start with); knowing either satisfies the next rank.
+        alternates = {}
+        for m in keep:
+            if m is not by_rank[m["rank"]]:
+                alternates.setdefault(by_rank[m["rank"]]["id"], []).append(m["id"])
         keep = sorted(by_rank.values(), key=lambda m: (m["rank"], m["level"], m["id"]))
         if not keep:
             continue
@@ -238,6 +244,11 @@ def build_class(cls, wt, books, spells):
                 row["faction"] = faction
             if prev:
                 row["prev"] = prev
+                # Only where the trainer data asks for the other ID; the rest are
+                # proc and effect records nobody learns.
+                alt = [a for a in alternates.get(prev, []) if a in wt.get(sid, {}).get("needs", [])]
+                if alt:
+                    row["prevAlt"] = sorted(alt)
             needs = [n for n in wt.get(sid, {}).get("needs", []) if n != prev and n not in family_ids]
             if needs:
                 row["needs"] = needs
@@ -288,6 +299,8 @@ def emit(token, label, rows, build, trees):
         for key in ("cost", "book", "prev", "requires", "race", "skill"):
             if key in r:
                 fields.append(f"{key} = {r[key]}")
+        if "prevAlt" in r:
+            fields.append(f"prevAlt = {{ {', '.join(str(n) for n in r['prevAlt'])} }}")
         if "needs" in r:
             fields.append(f"needs = {{ {', '.join(str(n) for n in r['needs'])} }}")
         if "faction" in r:

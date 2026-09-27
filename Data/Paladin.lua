@@ -16,7 +16,7 @@ SBE.Data.PALADIN = {
         { id = 1152, level = 8, tab = 1, cost = 100 }, -- Purify
         { id = 853, level = 8, tab = 2, rank = 1, cost = 100 }, -- Hammer of Justice 1
         { id = 633, level = 10, tab = 1, rank = 1, cost = 300 }, -- Lay on Hands 1
-        { id = 20287, level = 10, tab = 1, rank = 2, cost = 300, prev = 20154 }, -- Seal of Righteousness 2
+        { id = 20287, level = 10, tab = 1, rank = 2, cost = 300, prev = 20154, prevAlt = { 21084 } }, -- Seal of Righteousness 2
         { id = 1022, level = 10, tab = 2, rank = 1, cost = 300 }, -- Blessing of Protection 1
         { id = 10290, level = 10, tab = 2, rank = 2, cost = 300, prev = 465 }, -- Devotion Aura 2
         { id = 1311649, level = 10, tab = 2, rank = 1 }, -- Seal of Fury 1

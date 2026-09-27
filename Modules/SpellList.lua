@@ -23,7 +23,7 @@ do -- Private Scope
     local refreshPending = false
 
     -- Forward declarations: keep these as file-locals so they never leak into _G.
-    local Init, AddEntry, FamilyKnown, IsDone, IsEligible, IsSkipped, ToggleSkip, Level, Cost, StateOf
+    local Init, AddEntry, FamilyKnown, PrevKnown, IsDone, IsEligible, IsSkipped, ToggleSkip, Level, Cost, StateOf
     local Build, NewAtLevel, Matches, Discover, RequestData, OnDataLoaded, Changed, Tabs
 
     function Init()
@@ -80,6 +80,19 @@ do -- Private Scope
             end
             id = nextRank[id]
             seen = seen + 1
+        end
+        return false
+    end
+
+    -- The previous rank may exist under a second ID (prevAlt).
+    function PrevKnown(entry)
+        if (not entry.prev or SBE.IsKnown(entry.prev)) then
+            return true
+        end
+        for _, id in ipairs(entry.prevAlt or {}) do
+            if (SBE.IsKnown(id)) then
+                return true
+            end
         end
         return false
     end
@@ -156,7 +169,7 @@ do -- Private Scope
         if (level > playerLevel) then
             return STATE_FUTURE
         end
-        if (entry.prev and not SBE.IsKnown(entry.prev)) then
+        if (not PrevKnown(entry)) then
             return STATE_BLOCKED
         end
         for _, need in ipairs(entry.needs or {}) do
@@ -357,6 +370,7 @@ do -- Private Scope
         return nil
     end
     SpellList.ToggleSkip = ToggleSkip
+    SpellList.PrevKnown = PrevKnown
     SpellList.IsSkipped = function(id) return byId[id] ~= nil and IsSkipped(byId[id]) end
     SpellList.IsTrainable = function(id)
         local entry = byId[id]
