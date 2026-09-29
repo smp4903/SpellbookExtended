@@ -20,14 +20,15 @@ do -- Private Scope
     local HEADER_HEIGHT = 24
     local ICON_SIZE = 20
     local CHILD_ICON_SIZE = 18
-    local ICON_BUTTON = 22
     local BOOK_ICON = "Interface\\Icons\\INV_Misc_Book_09"
-    local FILTER_ICON = "Interface\\Icons\\INV_Misc_Gear_01"
+    -- The frame's own maximise button, as on Blizzard's spellbook.
+    local EXPAND_ATLAS = "RedButton-Expand"
     local ARROW = "Interface\\ChatFrame\\ChatFrameExpandArrow"
 
     local INK = { 0.18, 0.10, 0.02 }
     local INK_SOFT = { 0.36, 0.24, 0.12 }
     local INK_FADED = { 0.45, 0.40, 0.34 }
+    local TRAINABLE = { 0.10, 0.45, 0.05 } -- the panel's "Available" green
     local BAD = { 0.62, 0.08, 0.04 }
     local NOTE = { 0.10, 0.25, 0.55 }
     local TONES = { bad = BAD, note = NOTE, soft = INK_SOFT }
@@ -42,11 +43,11 @@ do -- Private Scope
     local panelHooked = false
 
     -- Forward declarations: keep these as file-locals so they never leak into _G.
-    local Create, CreateToolbar, CreatePage, CreateFooter, CreateIconButton, Colour, Height
+    local Create, CreateToolbar, CreatePage, CreateFooter, Colour, Height, SetHover, MenuToggles
     local AcquireRow, AcquireHeader, ReleaseAll, DrawRow, DrawHeader, DrawFooter, Refresh
     local OnRowClick, OnRowDrag, ShowRowTooltip, UpdateCooldown, UpdateCooldowns, OnHeaderClick
     local TogglePanel, OpenPanelAt, UpdateFooterLit, HookPanel, ShowFilterMenu
-    local EnsureBlizzButton, ShowBlizzButton, HideBlizzButton, PlaceBlizzButton, SavePosition, RestorePosition
+    local EnsureBlizzButton, ShowBlizzButton, HideBlizzButton, PlaceBlizzButton, LayerBlizzButton, SavePosition, RestorePosition
     local Toggle, ShowBook, PlaySoundKit
 
     function Colour(fontString, c)
@@ -150,47 +151,56 @@ do -- Private Scope
         end
     end
 
-    function CreateIconButton(parent, texture, onEnter)
-        local button = CreateFrame("Button", nil, parent)
-        button:SetSize(ICON_BUTTON, ICON_BUTTON)
-        button.icon = button:CreateTexture(nil, "ARTWORK")
-        button.icon:SetAllPoints()
-        button.icon:SetTexture(texture)
-        button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-        button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-        button:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
-        button:SetScript("OnEnter", onEnter)
-        button:SetScript("OnLeave", GameTooltip_Hide)
-        return button
-    end
-
     function CreateToolbar()
-        -- Where the secure "Blizzard's spellbook" button sits; shows a greyed
-        -- stand-in while that button is unavailable (in combat).
-        local spot = CreateIconButton(frame, BOOK_ICON, function(self)
+        -- Beside the close button, where Blizzard's spellbook has its maximise
+        -- button. This greyed stand-in marks the spot; the secure button that
+        -- opens Blizzard's spellbook sits over it out of combat.
+        local spot = CreateFrame("Button", nil, frame)
+        spot:SetSize(24, 24)
+        if (frame.CloseButton) then
+            spot:SetPoint("RIGHT", frame.CloseButton, "LEFT", 2, 0)
+        else
+            spot:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -24, 0)
+        end
+        if (spot.SetNormalAtlas) then
+            spot:SetNormalAtlas(EXPAND_ATLAS.."-Disabled")
+        end
+        spot:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetText("Blizzard's spellbook")
-            GameTooltip:AddLine("Not available in combat.", 1, 0.1, 0.1)
+            if (InCombatLockdown()) then
+                GameTooltip:AddLine("Not available in combat.", 1, 0.1, 0.1)
+            else
+                -- The real button should be here; put it back.
+                ShowBlizzButton()
+                GameTooltip:AddLine("Use the micro button if this does not open it.", 1, 1, 1, true)
+            end
             GameTooltip:Show()
         end)
-        spot:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -10, -30)
-        spot.icon:SetDesaturated(true)
-        spot:SetAlpha(0.6)
+        spot:SetScript("OnLeave", GameTooltip_Hide)
         frame.blizzSpot = spot
 
-        local filterButton = CreateIconButton(frame, FILTER_ICON, function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText("Filter")
-            GameTooltip:Show()
-        end)
-        filterButton:SetPoint("RIGHT", spot, "LEFT", -4, 0)
-        filterButton:SetScript("OnClick", ShowFilterMenu)
+        -- The same arrow Blizzard's spellbook uses for its settings menu.
+        local ok, filterButton = pcall(CreateFrame, "DropdownButton", nil, frame, "UIPanelArrowDropdownButtonTemplate")
+        if (ok and filterButton and filterButton.SetupMenu) then
+            filterButton:SetupMenu(function(_, root)
+                for _, toggle in ipairs(MenuToggles()) do
+                    root:CreateCheckbox(toggle[1], toggle[2], toggle[3])
+                end
+            end)
+        else
+            filterButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+            filterButton:SetSize(20, 20)
+            filterButton:SetText("...")
+            filterButton:SetScript("OnClick", ShowFilterMenu)
+        end
+        filterButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -14, -33)
         frame.filterButton = filterButton
 
         local box = CreateFrame("EditBox", nil, frame, "SearchBoxTemplate")
         box:SetHeight(20)
         box:SetPoint("TOPLEFT", frame, "TOPLEFT", 66, -31)
-        box:SetPoint("RIGHT", filterButton, "LEFT", -6, 0)
+        box:SetPoint("RIGHT", filterButton, "LEFT", -8, 0)
         box:HookScript("OnTextChanged", function(self)
             search = self:GetText() or ""
             Refresh()
@@ -214,9 +224,16 @@ do -- Private Scope
         bg:SetAllPoints()
         SBE.Panel.ApplyParchment(bg)
 
-        local scroll = CreateFrame("ScrollFrame", "SpellbookExtendedBookScroll", page, "UIPanelScrollFrameTemplate")
+        -- ScrollFrameTemplate brings the thin modern scroll bar; older clients
+        -- fall back to the classic one.
+        local ok, scroll = pcall(CreateFrame, "ScrollFrame", "SpellbookExtendedBookScroll", page, "ScrollFrameTemplate")
+        local gutter = 20
+        if (not ok or not scroll) then
+            scroll = CreateFrame("ScrollFrame", "SpellbookExtendedBookScroll", page, "UIPanelScrollFrameTemplate")
+            gutter = 26
+        end
         scroll:SetPoint("TOPLEFT", page, "TOPLEFT", 4, -4)
-        scroll:SetPoint("BOTTOMRIGHT", page, "BOTTOMRIGHT", -26, 4)
+        scroll:SetPoint("BOTTOMRIGHT", page, "BOTTOMRIGHT", -gutter, 6)
 
         local content = CreateFrame("Frame", nil, scroll)
         content:SetSize(WIDTH - 50, 10)
@@ -302,18 +319,23 @@ do -- Private Scope
         header.rule:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", 0, 1)
         header.rule:SetColorTexture(INK_SOFT[1], INK_SOFT[2], INK_SOFT[3], 0.55)
 
-        header.highlight = header:CreateTexture(nil, "HIGHLIGHT")
-        header.highlight:SetAllPoints()
-        header.highlight:SetColorTexture(1, 0.9, 0.6, 0.2)
+        header.hover = header:CreateTexture(nil, "BACKGROUND")
+        header.hover:SetAllPoints()
+        header.hover:SetColorTexture(1, 0.95, 0.8, 0.25)
+        header.hover:Hide()
 
         header:SetScript("OnClick", OnHeaderClick)
         header:SetScript("OnEnter", function(self)
+            SetHover(self, true)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetText(self.data.name)
             GameTooltip:AddLine(self.data.collapsed and "Click to show this section." or "Click to fold this section.", 0.6, 0.6, 0.6, true)
             GameTooltip:Show()
         end)
-        header:SetScript("OnLeave", GameTooltip_Hide)
+        header:SetScript("OnLeave", function(self)
+            SetHover(self, false)
+            GameTooltip_Hide()
+        end)
 
         headerPool[usedHeaders] = header
         return header
@@ -360,17 +382,29 @@ do -- Private Scope
         row.name:SetWordWrap(false)
         row.name:SetShadowOffset(0, 0)
 
-        row.highlight = row:CreateTexture(nil, "HIGHLIGHT")
-        row.highlight:SetAllPoints()
-        row.highlight:SetColorTexture(1, 0.9, 0.6, 0.35)
+        -- Behind the icon and text, so the hovered row keeps its own colours.
+        row.hover = row:CreateTexture(nil, "BACKGROUND")
+        row.hover:SetAllPoints()
+        row.hover:SetColorTexture(1, 0.95, 0.8, 0.35)
+        row.hover:Hide()
 
         row:SetScript("OnClick", OnRowClick)
         row:SetScript("OnDragStart", OnRowDrag)
-        row:SetScript("OnEnter", ShowRowTooltip)
-        row:SetScript("OnLeave", GameTooltip_Hide)
+        row:SetScript("OnEnter", function(self)
+            SetHover(self, true)
+            ShowRowTooltip(self)
+        end)
+        row:SetScript("OnLeave", function(self)
+            SetHover(self, false)
+            GameTooltip_Hide()
+        end)
 
         rowPool[usedRows] = row
         return row
+    end
+
+    function SetHover(region, on)
+        region.hover:SetShown(on)
     end
 
     function ReleaseAll()
@@ -428,7 +462,7 @@ do -- Private Scope
             row.icon:SetTexture(SBE.GetSpellIcon(item.entry.id) or 134400)
             row.icon:SetDesaturated(true)
             row.icon:SetAlpha(trainable and 0.8 or 0.55)
-            Colour(row.name, trainable and INK_SOFT or INK_FADED)
+            Colour(row.name, trainable and TRAINABLE or INK_FADED)
             Colour(row.meta, TONES[data.tone] or INK_SOFT)
             if (row.cooldown) then
                 row.cooldown:Clear()
@@ -616,16 +650,23 @@ do -- Private Scope
         if (not data or data.kind == "upcoming") then
             return
         end
+        -- The client can refuse the spellbook pickup without an error; when
+        -- the cursor stays empty, the spell is picked up by its ID instead.
         local spell = data.spell
+        local function holding()
+            return GetCursorInfo and GetCursorInfo() ~= nil
+        end
         if (spell.slot and C_SpellBook.PickupSpellBookItem) then
-            C_SpellBook.PickupSpellBookItem(spell.slot, spell.bank)
-        elseif (spell.spellID) then
-            if (C_Spell.PickupSpell) then
-                C_Spell.PickupSpell(spell.spellID)
-            elseif (PickupSpell) then
-                PickupSpell(spell.spellID)
+            pcall(C_SpellBook.PickupSpellBookItem, spell.slot, spell.bank)
+        end
+        if (not holding() and spell.spellID) then
+            local pickup = (C_Spell and C_Spell.PickupSpell) or PickupSpell
+            if (pickup) then
+                pcall(pickup, spell.spellID)
             end
         end
+        SBE.DebugPrint(string.format("drag %s slot=%s id=%s holding=%s", tostring(spell.name),
+            tostring(spell.slot), tostring(spell.spellID), tostring(holding())))
     end
 
     function ShowRowTooltip(row)
@@ -679,7 +720,7 @@ do -- Private Scope
         UpdateFooterLit()
     end
 
-    function ShowFilterMenu(owner)
+    function MenuToggles()
         local options = SBE.options
         local function refreshAfter(fn)
             return function()
@@ -687,7 +728,7 @@ do -- Private Scope
                 Refresh()
             end
         end
-        local toggles = {
+        return {
             { "Show upcoming spells", function() return options.bookUpcoming end,
                 refreshAfter(function() options.bookUpcoming = not options.bookUpcoming end) },
             { "Hide passive spells", function() return GetCVarBool("spellBookHidePassives") end,
@@ -695,19 +736,18 @@ do -- Private Scope
             { "Unfold all ranks", function() return options.bookUnfoldAll end,
                 refreshAfter(function() options.bookUnfoldAll = not options.bookUnfoldAll end) },
         }
+    end
 
+    -- Only where the client lacks dropdown buttons.
+    function ShowFilterMenu(owner)
+        local toggles = MenuToggles()
         if (MenuUtil and MenuUtil.CreateContextMenu) then
             MenuUtil.CreateContextMenu(owner, function(_, root)
                 for _, toggle in ipairs(toggles) do
-                    if (toggle) then
-                        root:CreateCheckbox(toggle[1], toggle[2], toggle[3])
-                    else
-                        root:CreateDivider()
-                    end
+                    root:CreateCheckbox(toggle[1], toggle[2], toggle[3])
                 end
             end)
         else
-            -- Without the menu system, the button toggles upcoming spells.
             toggles[1][3]()
         end
     end
@@ -732,15 +772,16 @@ do -- Private Scope
         button:SetAttribute("clickbutton", micro)
         button:SetAttribute("useOnKeyDown", false)
         button:RegisterForClicks("LeftButtonUp")
-        button:SetFrameStrata("HIGH")
-        button:SetSize(ICON_BUTTON, ICON_BUTTON)
-
-        local icon = button:CreateTexture(nil, "ARTWORK")
-        icon:SetAllPoints()
-        icon:SetTexture(BOOK_ICON)
-        icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-        button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-        button:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+        button:SetSize(24, 24)
+        if (button.SetNormalAtlas) then
+            button:SetNormalAtlas(EXPAND_ATLAS)
+            button:SetPushedAtlas(EXPAND_ATLAS.."-Pressed")
+            button:SetHighlightAtlas("RedButton-Highlight", "ADD")
+        else
+            local icon = button:CreateTexture(nil, "ARTWORK")
+            icon:SetAllPoints()
+            icon:SetTexture(BOOK_ICON)
+        end
 
         button:HookScript("OnClick", function()
             if (frame:IsShown()) then
@@ -754,9 +795,26 @@ do -- Private Scope
             GameTooltip:Show()
         end)
         button:SetScript("OnLeave", GameTooltip_Hide)
+        button:SetScript("OnUpdate", LayerBlizzButton)
         button:Hide()
         blizzButton = button
         return button
+    end
+
+    -- On the book's own layer, just above it: windows opened over the book
+    -- cover the button too. Clicking a window raises it, so the level is
+    -- checked every frame while the button shows.
+    function LayerBlizzButton(button)
+        if (InCombatLockdown()) then
+            return
+        end
+        local strata, level = frame:GetFrameStrata(), frame:GetFrameLevel() + 20
+        if (button:GetFrameStrata() ~= strata) then
+            button:SetFrameStrata(strata)
+        end
+        if (button:GetFrameLevel() ~= level) then
+            button:SetFrameLevel(level)
+        end
     end
 
     -- Over the stand-in, in screen coordinates.
@@ -771,13 +829,21 @@ do -- Private Scope
         return true
     end
 
-    function ShowBlizzButton()
+    -- Right after the book shows, its buttons may not have a screen position
+    -- yet; placing is retried on the next frames until they do.
+    function ShowBlizzButton(tries)
         if (InCombatLockdown() or not (frame and frame:IsShown())) then
             return
         end
         local button = EnsureBlizzButton()
-        if (button and PlaceBlizzButton(button)) then
+        if (not button) then
+            return
+        end
+        if (PlaceBlizzButton(button)) then
+            LayerBlizzButton(button)
             button:Show()
+        elseif ((tries or 0) < 10) then
+            C_Timer.After(0, function() ShowBlizzButton((tries or 0) + 1) end)
         end
     end
 

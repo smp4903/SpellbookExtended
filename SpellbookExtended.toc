@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: Spellbook Extended
 ## Notes: Shows the class spells and ranks you can still learn, grouped by the level they unlock at.
-## Version: 0.1.1
+## Version: 0.1.3
 ## DefaultState: enabled
 ## Author: CassiniEU @ Twitch.com
 ## SavedVariables: SpellbookExtended_TrainerCache

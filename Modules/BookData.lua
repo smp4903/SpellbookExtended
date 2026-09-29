@@ -20,6 +20,9 @@ do -- Private Scope
     local BANK_PET = BANK.Pet or 1
 
     -- Forward declarations: keep these as file-locals so they never leak into _G.
+    -- Upcoming spells are listed this many levels ahead; the panel has the rest.
+    local LOOKAHEAD = 4
+
     local Build, KnownSections, ReadItem, AddGroups, AddUpcoming, UpcomingMeta
     local RankOf, Call, Matches
 
@@ -133,25 +136,28 @@ do -- Private Scope
         return sections, byName
     end
 
-    -- Right-hand text and colour key for a spell still to learn.
+    -- Right-hand text and colour key for a spell still to learn: the rank,
+    -- then its level, source or cost.
     function UpcomingMeta(item)
         local entry = item.entry
+        local text, tone
         if (item.state == SpellList.STATE_FUTURE or ((entry.quest or entry.book) and item.gated)) then
-            return "Lvl "..item.level, "bad"
+            text, tone = "Lvl "..item.level, "bad"
+        elseif (entry.quest) then
+            text, tone = "Quest", "note"
+        elseif (entry.book) then
+            text, tone = "Book", "note"
+        elseif (item.state == SpellList.STATE_BLOCKED) then
+            text, tone = "Needs rank", "bad"
+        elseif (item.cost and item.cost > 0 and SBE.options.showCosts) then
+            text, tone = SBE.FormatMoney(item.cost), (item.cost <= GetMoney()) and "soft" or "bad"
+        else
+            text, tone = "Train", "soft"
         end
-        if (entry.quest) then
-            return "Quest", "note"
+        if (entry.rank) then
+            text = "|cff5c3d1fR"..entry.rank.."|r  "..text
         end
-        if (entry.book) then
-            return "Book", "note"
-        end
-        if (item.state == SpellList.STATE_BLOCKED) then
-            return "Needs rank", "bad"
-        end
-        if (item.cost and item.cost > 0 and SBE.options.showCosts) then
-            return SBE.FormatMoney(item.cost), (item.cost <= GetMoney()) and "soft" or "bad"
-        end
-        return "Train", "soft"
+        return text, tone
     end
 
     -- Spells still to learn go to the section with their spellbook tab's name.
@@ -205,6 +211,7 @@ do -- Private Scope
             end
 
             local upcomingCount = 0
+            local horizon = UnitLevel("player") + LOOKAHEAD
             if (opts.showUpcoming ~= false) then
                 table.sort(section.upcoming, function(a, b)
                     if (a.level ~= b.level) then
@@ -214,10 +221,7 @@ do -- Private Scope
                 end)
                 for _, item in ipairs(section.upcoming) do
                     local label = item.name or ("Spell "..item.entry.id)
-                    if (item.entry.rank) then
-                        label = label.." (Rank "..item.entry.rank..")"
-                    end
-                    if (Matches(label, search)) then
+                    if (item.level <= horizon and Matches(label, search)) then
                         local meta, tone = UpcomingMeta(item)
                         table.insert(sectionRows, { kind = "upcoming", item = item, name = label, meta = meta, tone = tone })
                         upcomingCount = upcomingCount + 1
@@ -243,4 +247,5 @@ do -- Private Scope
     BookData.Build = Build
     BookData.BANK_PLAYER = BANK_PLAYER
     BookData.BANK_PET = BANK_PET
+    BookData.LOOKAHEAD = LOOKAHEAD
 end

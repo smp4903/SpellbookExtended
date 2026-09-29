@@ -52,7 +52,10 @@ local function newObject(kind, name)
   o.SetChecked = function(self, v) self._checked = v end
   o.SetEnabled = function(self, v) self._enabled = v and true or false end
   o.GetName = function() return name end
-  o.GetFrameStrata = function() return "MEDIUM" end
+  o.GetFrameStrata = function(self) return rawget(self, "_strata") or "MEDIUM" end
+  o.SetFrameStrata = function(self, v) self._strata = v end
+  o.GetFrameLevel = function(self) return rawget(self, "_level") or 1 end
+  o.SetFrameLevel = function(self, v) self._level = v end
   o.GetParent = function() return nil end
   return o
 end
@@ -112,6 +115,8 @@ function GetMoney() return PLAYER.money end
 function GetMoneyString(c) return string.format("%dg%ds%dc", c/10000, (c%10000)/100, c%100) end
 function IsPlayerSpell(id) return PLAYER.known[id] == true end
 function IsModifiedClick() return false end
+CURSOR = nil
+function GetCursorInfo() return CURSOR end
 C_Spell = {
   GetSpellName = function(id) return "Spell"..id end,
   GetSpellTexture = function(id) return 1 end,

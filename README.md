@@ -8,10 +8,10 @@ The key bound to Toggle Spellbook opens a narrow (280px) spellbook at the left e
 
 - One scrolling list with a header per spellbook section (General, the class specs, Pet). Click a header to fold its section; the search box filters everything and opens folded sections while you search.
 - 24px rows: icon, name and rank. Spells with lower ranks get a plus button; click the row to unfold the lower ranks and drag one to a bar. Flyouts such as Paladin blessings are not grouped: each spell has its own row.
-- Spells you can still learn close each section, greyed, with the level in red or the cost if you can train them now. Click one to open the Spells to learn panel at its level; right-click to skip it. The filter menu hides them.
+- Spells you can learn within the next 4 levels close each section, greyed, with their rank and the level in red or the cost if you can train them now. Click one to open the Spells to learn panel at its level; right-click to skip it. The arrow menu beside the search box hides them.
 - Drag any spell to your action bars, shift-click to link, and see cooldowns on the icons. Casting by clicking is left to Blizzard's book, so the compact book opens freely in combat.
 - "Spells to learn" in its footer opens the panel docked beside it, with what you can train now and its cost.
-- The book icon in its toolbar opens Blizzard's spellbook (not in combat). The Spellbook micro button still opens Blizzard's book too.
+- The expand button beside the close button opens Blizzard's spellbook (not in combat). The Spellbook micro button still opens Blizzard's book too.
 - Blizzard's spellbook is never modified, so casting from it keeps working.
 
 - Every spell you have not learned yet, levels 1 to 60. Spells above your level are greyed out with the level in red; missed lower ranks stay listed until you learn something higher.
